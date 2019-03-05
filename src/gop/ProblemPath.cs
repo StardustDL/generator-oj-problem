@@ -7,8 +7,8 @@ namespace gop
 {
     public class ProblemPath
     {
-        public const string F_Config = "config.json", F_Description = "description.txt", F_Input = "input.txt", F_Output = "output.txt", F_Hint = "hint.txt", F_StandardProgram = "std.cpp", F_LintLog = "lints.json", F_Package = "package.json";
-        public const string D_Test = "tests", D_Sample = "samples", D_Description = "descriptions", D_SourceCode = "src", D_Target = "target", D_Temp = "temp", D_Log = "log", D_Data = "data";
+        public const string F_Config = "config.json", F_Description = "description.md", F_Input = "input.md", F_Output = "output.md", F_Hint = "hint.md", F_StandardProgram = "std.cpp", F_LintLog = "lints.json", F_Package = "package.json", F_Source = "sources.md";
+        public const string D_Test = "tests", D_Sample = "samples", D_Description = "descriptions", D_SourceCode = "src", D_Target = "target", D_Temp = "temp", D_Log = "log", D_Extra = "extra";
         public const string E_Input = ".in", E_Output = ".out";
 
         public static string GetTestInput(string name)
@@ -53,7 +53,9 @@ namespace gop
 
         public string Package { get; private set; }
 
-        public string Data { get; private set; }
+        public string Extra { get; private set; }
+
+        public string Source { get; private set; }
 
         public TestCasePath GetSample(string name)
         {
@@ -103,7 +105,8 @@ namespace gop
             Tests = Path.Join(Root, D_Test);
             LintLog = Path.Join(Log, F_LintLog);
             Package = Path.Join(Root, F_Package);
-            Data = Path.Join(Root, D_Data);
+            Extra = Path.Join(Root, D_Extra);
+            Source = Path.Join(Descriptions, F_Source);
         }
 
         public void Initialize()
@@ -111,10 +114,11 @@ namespace gop
             File.WriteAllText(Config, JsonConvert.SerializeObject(new ProblemConfig { Name = "", Author = "", TimeLimit = 1, MemoryLimit = 128 }, Formatting.Indented), Encoding.UTF8);
 
             Directory.CreateDirectory(Descriptions);
-            File.WriteAllText(Description, "Description", Encoding.UTF8);
-            File.WriteAllText(Hint, "Hint", Encoding.UTF8);
-            File.WriteAllText(Input, "Input description", Encoding.UTF8);
-            File.WriteAllText(Output, "Output description", Encoding.UTF8);
+            File.WriteAllText(Description, "", Encoding.UTF8);
+            File.WriteAllText(Hint, "", Encoding.UTF8);
+            File.WriteAllText(Input, "", Encoding.UTF8);
+            File.WriteAllText(Output, "", Encoding.UTF8);
+            File.WriteAllText(Source, "", Encoding.UTF8);
 
             Directory.CreateDirectory(SourceCode);
             File.WriteAllText(StandardProgram, "// Standard program", Encoding.UTF8);
@@ -126,7 +130,7 @@ namespace gop
 
             Directory.CreateDirectory(Tests);
 
-            Directory.CreateDirectory(Data);
+            Directory.CreateDirectory(Extra);
         }
     }
 }

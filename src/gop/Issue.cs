@@ -9,14 +9,17 @@
 
     public class Issue
     {
-        public Issue(IssueLevel level, string content)
+        public Issue(IssueLevel level, string content,string addition = "")
         {
-            this.Level = level;
-            this.Content = content;
+            Level = level;
+            Content = content;
+            Addition = addition;
         }
 
         public IssueLevel Level { get; private set; }
 
         public string Content { get; private set; }
+
+        public string Addition { get; private set; }
     }
 }

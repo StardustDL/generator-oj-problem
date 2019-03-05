@@ -14,14 +14,17 @@ $ ../gop init
 ```
 4. Modify the files in the directory `problem`.
    1. `config.json` Config information
-   2. `descriptions/` All text for description.
-      1. `descriptions/description.txt` Description
-      2. `descriptions/input.txt` Description of input
-      3. `descriptions/output.txt` Description of output
-      4. `descriptions/hint.txt` Hint
+   2. `descriptions/` All text for description. 
+      1. Supports plain [CommonMark](https://commonmark.org/) by built-in render. 
+         - **Attention**: No LaTex supports.
+      2. `descriptions/description.md` Description
+      3. `descriptions/input.md` Description of input
+      4. `descriptions/output.md` Description of output
+      5. `descriptions/hint.md` Hint
+      6. `descriptions/source.md` Source
    3. `samples/` Sample data
       1. `samples/test0.in` Input of sample
-      2. `samples/test0.output` Output of sample
+      2. `samples/test0.out` Output of sample
    4.  `tests/` Test data (same form to `samples/`)
    5.  `src/std.cpp` Standard program
 5. After you finish things above, use this command to check whether your directory is available to pack:
@@ -37,7 +40,9 @@ $ ../gop preview
 $ ../gop pack
 ```
 
-If you have addition files (such as images), add to `/data/` directory, and all files in this directory will be packed.
+Addition:
+- If you have addition files (such as images), add to `/extra/` directory, and all files in this directory will be packed.
+- Use `--help` to see more information about this tool.
 
 Have fun!
 
