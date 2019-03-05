@@ -1,90 +1,53 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
+using System.Text;
 
 namespace gop
 {
-    public enum MessageLevel
-    {
-        Info,
-        Warning,
-        Error
-    }
-
-    public class Message
-    {
-        public Message(MessageLevel level, string content)
-        {
-            this.Level = level;
-            this.Content = content;
-        }
-
-        public MessageLevel Level { get; private set; }
-
-        public string Content { get; private set; }
-    }
-
     public static class Linter
     {
-        public static IEnumerable<Message> Lint(Problem problem)
+        static string ReadAll(string path)
         {
-            if (String.IsNullOrWhiteSpace(problem.Name))
-            {
-                yield return new Message(MessageLevel.Error, "缺少题目名称。");
-            }
+            return File.ReadAllText(path, Encoding.UTF8);
+        }
 
-            if (String.IsNullOrWhiteSpace(problem.Author))
-            {
-                yield return new Message(MessageLevel.Error, "缺少题目作者。");
-            }
+        public static IEnumerable<Issue> Config(ProblemConfig config)
+        {
+            if (String.IsNullOrWhiteSpace(config.Name))
+                yield return new Issue(IssueLevel.Error, "The name of the problem is missing.");
+            if (String.IsNullOrWhiteSpace(config.Author))
+                yield return new Issue(IssueLevel.Error, "The author of the problem is missing.");
+            if (config.TimeLimit == 0)
+                yield return new Issue(IssueLevel.Error, "The time limit cannot be 0.");
+            if (config.MemoryLimit == 0)
+                yield return new Issue(IssueLevel.Error, "The memory limit cannot be 0.");
+        }
 
-            if (problem.TimeLimit == 0)
-            {
-                yield return new Message(MessageLevel.Error, "时间限制不能为 0 。");
-            }
+        public static IEnumerable<Issue> Description(ProblemPath problem)
+        {
+            if (!File.Exists(problem.Description) || String.IsNullOrWhiteSpace(ReadAll(problem.Description)))
+                yield return new Issue(IssueLevel.Error, "The description of the problem is missing.");
+            if (!File.Exists(problem.Input) || String.IsNullOrWhiteSpace(ReadAll(problem.Input)))
+                yield return new Issue(IssueLevel.Error, "The input description of the problem is missing.");
+            if (!File.Exists(problem.Output) || String.IsNullOrWhiteSpace(ReadAll(problem.Output)))
+                yield return new Issue(IssueLevel.Error, "The output description of the problem is missing.");
+            if (!File.Exists(problem.StandardProgram) || String.IsNullOrWhiteSpace(ReadAll(problem.StandardProgram)))
+                yield return new Issue(IssueLevel.Error, "The standard program of the problem is missing.");
+        }
 
-            if (problem.MemoryLimit == 0)
-            {
-                yield return new Message(MessageLevel.Error, "空间限制不能为 0 。");
-            }
-
-            if (String.IsNullOrWhiteSpace(problem.Description))
-            {
-                yield return new Message(MessageLevel.Error, "缺少题目描述。");
-            }
-
-            if (String.IsNullOrWhiteSpace(problem.Input))
-            {
-                yield return new Message(MessageLevel.Error, "缺少输入描述。");
-            }
-
-            if (String.IsNullOrWhiteSpace(problem.Output))
-            {
-                yield return new Message(MessageLevel.Error, "缺少输出描述。");
-            }
-
-            if (String.IsNullOrWhiteSpace(problem.StandardProgram))
-            {
-                yield return new Message(MessageLevel.Error, "缺少标准程序。");
-            }
-
-            switch (problem.SampleData.Count)
-            {
-                case 0:
-                    yield return new Message(MessageLevel.Error, "缺少样例数据。");
-                    break;
-                case 1:
-                    break;
-                default:
-                    yield return new Message(MessageLevel.Warning, "有多于一个样例数据，将仅使用第一个。");
-                    break;
-            }
-
-            switch (problem.TestData.Count)
-            {
-                case 0:
-                    yield return new Message(MessageLevel.Error, "缺少测试数据。");
-                    break;
-            }
+        public static IEnumerable<Issue> TestCase(TestCasePath test)
+        {
+            var fi = new FileInfo(test.InputFile);
+            if (!fi.Exists)
+                yield return new Issue(IssueLevel.Error, "The input data is missing.");
+            else if (fi.Length == 0)
+                yield return new Issue(IssueLevel.Warning, "The input data is empty.");
+            var fo = new FileInfo(test.OutputFile);
+            if (!fo.Exists)
+                yield return new Issue(IssueLevel.Error, "The output data is missing.");
+            else if (fo.Length == 0)
+                yield return new Issue(IssueLevel.Warning, "The output data is empty.");
         }
     }
 }

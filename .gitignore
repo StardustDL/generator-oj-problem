@@ -3,6 +3,7 @@
 
 /.vscode/
 /resources/*
+/temp/*
 
 # User-specific files
 *.suo
