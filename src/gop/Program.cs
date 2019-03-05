@@ -8,6 +8,7 @@ using System.CommandLine.Invocation;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -201,7 +202,7 @@ namespace gop
                 ProblemConfig config = null;
                 if (!File.Exists(problem.Config))
                 {
-                    var issue = new Issue(IssueLevel.Error, "The problem configuration information is not found");
+                    var issue = new Issue(IssueLevel.Error, "The problem configuration information is not found.");
                     ciss.Add(issue);
                 }
                 else
@@ -324,32 +325,88 @@ namespace gop
 
             ConsoleUI.WriteInfo(new OutputText("Checking before pack...", true));
 
-            if (Check().Any(x => x.Level == IssueLevel.Error))
+            var lints = Check().ToList();
+
+            if (lints.Any(x => x.Level == IssueLevel.Error))
             {
                 ConsoleUI.WriteError(new OutputText("The problem information is missing or incorrectly formatted, please check and repackage after passing.", true));
                 return;
             }
 
+            ConsoleUI.WriteInfo(new OutputText("Packing the problem...", true));
+            try
             {
-                ConsoleUI.Write(new OutputText("Packing the problem...", false));
-                try
+                var config = JsonConvert.DeserializeObject<ProblemConfig>(ReadAll(problem.Config));
+
+                Directory.CreateDirectory(problem.Target);
+
+                if (Directory.Exists(problem.Temp)) Directory.Delete(problem.Temp, true);
+                Directory.CreateDirectory(problem.Temp);
+
+                string filename = Path.Join(problem.Target, $"package-{config.Author}.zip");
+                if (File.Exists(filename)) File.Delete(filename);
+
+                using (ZipArchive arc = ZipFile.Open(filename, ZipArchiveMode.Create, Encoding.UTF8))
                 {
-                    string path = Directory.GetCurrentDirectory();
+                    ConsoleUI.Write(new OutputText("  Copy problem metadata...", true));
+                    arc.CreateEntryFromFile(problem.Config, ProblemPath.F_Config);
 
-                    ZipFile.CreateFromDirectory(Path.Join(path, problem.Tests), Path.Join(path, "test.zip"), CompressionLevel.Fastest, false);
+                    ConsoleUI.Write(new OutputText("  Copy descriptions...", true));
+                    arc.CreateEntryFromFile(problem.Description, Path.Join(ProblemPath.D_Description, ProblemPath.F_Description));
+                    arc.CreateEntryFromFile(problem.Input, Path.Join(ProblemPath.D_Description, ProblemPath.F_Input));
+                    arc.CreateEntryFromFile(problem.Output, Path.Join(ProblemPath.D_Description, ProblemPath.F_Output));
+                    arc.CreateEntryFromFile(problem.Hint, Path.Join(ProblemPath.D_Description, ProblemPath.F_Hint));
 
-                    string outpath = Path.Join(Path.GetDirectoryName(path), "package.zip");
+                    ConsoleUI.Write(new OutputText("  Copy source codes...", true));
+                    arc.CreateEntryFromFile(problem.StandardProgram, Path.Join(ProblemPath.D_SourceCode, ProblemPath.F_StandardProgram));
 
-                    ZipFile.CreateFromDirectory(path, outpath, CompressionLevel.Fastest, false);
+                    ConsoleUI.Write(new OutputText("  Copy samples...", true));
+                    foreach (var u in problem.GetSamples())
+                    {
+                        arc.CreateEntryFromFile(u.InputFile, Path.Join(ProblemPath.D_Sample, ProblemPath.GetTestInput(u.Name)));
+                        arc.CreateEntryFromFile(u.OutputFile, Path.Join(ProblemPath.D_Sample, ProblemPath.GetTestOutput(u.Name)));
+                    }
 
-                    ConsoleUI.WriteSuccess(new OutputText("Succeeded", true));
-                    ConsoleUI.Write(new OutputText($"Please submit this file: {outpath}", true));
+                    ConsoleUI.Write(new OutputText("  Copy tests...", true));
+                    string tests = Path.Join(problem.Temp, "tests.zip");
+                    ZipFile.CreateFromDirectory(problem.Tests, tests, CompressionLevel.Fastest, false, Encoding.UTF8);
+                    arc.CreateEntryFromFile(tests, "tests.zip");
+
+                    if (Directory.GetFileSystemEntries(problem.Data).Length > 0)
+                    {
+                        ConsoleUI.Write(new OutputText("  Copy data...", true));
+                        string data = Path.Join(problem.Temp, "data.zip");
+                        ZipFile.CreateFromDirectory(problem.Data, data, CompressionLevel.Fastest, false, Encoding.UTF8);
+                        arc.CreateEntryFromFile(tests, "data.zip");
+                    }
+
+                    ConsoleUI.Write(new OutputText("  Add logs...", true));
+                    var lintEntry = arc.CreateEntry(Path.Join(ProblemPath.D_Log, ProblemPath.F_LintLog));
+                    using (StreamWriter sw = new StreamWriter(lintEntry.Open(), Encoding.UTF8))
+                    {
+                        sw.WriteLine(JsonConvert.SerializeObject(lints, Formatting.Indented));
+                    }
+
+                    ConsoleUI.Write(new OutputText("  Add package metadata...", true));
+                    var packageEntry = arc.CreateEntry(ProblemPath.F_Package);
+                    using (StreamWriter sw = new StreamWriter(packageEntry.Open(), Encoding.UTF8))
+                    {
+                        var package = PackageConfig.Create();
+                        var ass = Assembly.GetExecutingAssembly();
+                        package.Sign = $"Signed - {config.Author} - {ass.FullName}";
+                        sw.WriteLine(JsonConvert.SerializeObject(package, Formatting.Indented));
+                    }
+
+                    ConsoleUI.Write(new OutputText("  Saving...", true));
                 }
-                catch (Exception ex)
-                {
-                    ConsoleUI.WriteError(new OutputText("Failed", true));
-                    Console.WriteLine($"An error has occurred: {ex.Message}。");
-                }
+
+                ConsoleUI.WriteSuccess(new OutputText("Succeeded", true));
+                ConsoleUI.Write(new OutputText($"Please submit this file: {filename}", true));
+            }
+            catch (Exception ex)
+            {
+                ConsoleUI.WriteError(new OutputText("Failed", true));
+                Console.WriteLine($"An error has occurred: {ex.Message}。");
             }
         }
     }
