@@ -1,19 +1,16 @@
-﻿using gop.Helpers;
-using gop.Adapters;
+﻿using gop.Adapters;
+using gop.Helpers;
 using gop.Problems;
 using Markdig;
 using Newtonsoft.Json;
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.CommandLine;
 using System.CommandLine.Invocation;
 using System.IO;
-using System.IO.Compression;
 using System.Linq;
 using System.Reflection;
 using System.Text;
-using System.Threading.Tasks;
 using static gop.Helpers.TextIO;
 
 namespace gop
@@ -56,10 +53,9 @@ namespace gop
             packCommand.AddOption(new Option(new string[] { "--platform", "-p" }, "The target platform.", new Argument<OnlineJudge>()));
             packCommand.Handler = CommandHandler.Create((bool force, OnlineJudge platform) => { Pack(platform, !force); });
 
-            var previewCommand = new Command("preview", "Preview the problem.")
-            {
-                Handler = CommandHandler.Create(() => { Preview(); })
-            };
+            var previewCommand = new Command("preview", "Preview the problem.");
+            previewCommand.AddOption(new Option("--html", "Generate an HTML document for previewing.", new Argument<bool>(false)));
+            previewCommand.Handler = CommandHandler.Create((bool html) => { Preview(html); });
 
             rootCommand.Add(initCommand);
             rootCommand.Add(packCommand);
@@ -95,12 +91,124 @@ namespace gop
             }
         }
 
-        static void Preview()
+        static void Preview(bool html)
         {
             try
             {
                 var problem = Load();
 
+                if (html)
+                {
+                    PreviewInHTML(problem);
+                }
+                else
+                {
+                    PreviewInCLI(problem);
+                }
+            }
+            catch (Exception ex)
+            {
+                ConsoleUI.ShowException(ex);
+            }
+
+            void PreviewInHTML(ProblemPath problem)
+            {
+                var config = JsonConvert.DeserializeObject<ProblemProfile>(ReadAll(problem.Profile));
+
+                StringBuilder sb = new StringBuilder();
+
+                sb.AppendLine("# Metadata");
+                sb.AppendLine();
+                sb.AppendLine($"- Name: {config.Name}");
+                sb.AppendLine($"- Author: {config.Author}");
+                sb.AppendLine($"- Time limit: {config.TimeLimit} second(s)");
+                sb.AppendLine($"- Memory Limit: {config.MemoryLimit} MB");
+                sb.AppendLine();
+
+                sb.AppendLine("# Description");
+                sb.AppendLine();
+                sb.AppendLine(ReadAll(problem.Description));
+                sb.AppendLine();
+
+                sb.AppendLine("# Input");
+                sb.AppendLine();
+                sb.AppendLine(ReadAll(problem.Input));
+                sb.AppendLine();
+
+                sb.AppendLine("# Output");
+                sb.AppendLine();
+                sb.AppendLine(ReadAll(problem.Output));
+                sb.AppendLine();
+
+                sb.AppendLine("# Samples");
+                sb.AppendLine();
+                foreach (var v in problem.GetSamples())
+                {
+                    sb.AppendLine($"## Samples {v.Name}");
+                    sb.AppendLine("### Input");
+                    sb.AppendLine("```");
+                    sb.AppendLine(ReadAll(v.InputFile));
+                    sb.AppendLine("```");
+                    sb.AppendLine("### Output");
+                    sb.AppendLine("```");
+                    sb.AppendLine(ReadAll(v.OutputFile));
+                    sb.AppendLine("```");
+                    sb.AppendLine();
+                }
+
+                sb.AppendLine("# Hint");
+                sb.AppendLine();
+                sb.AppendLine(ReadAll(problem.Hint));
+                sb.AppendLine();
+
+                sb.AppendLine("# Tests");
+                sb.AppendLine();
+                var tests = problem.GetTests().ToArray();
+                sb.AppendLine($"Tests: found **{tests.Length}** test(s)");
+                sb.AppendLine();
+                foreach (var v in tests)
+                {
+                    var fi = new FileInfo(v.InputFile);
+                    var fo = new FileInfo(v.OutputFile);
+                    sb.AppendLine($"- Test **{v.Name}**:");
+                    sb.AppendLine($"  - Length of input: **{fi.Length}** byte(s)");
+                    sb.AppendLine($"  - Length of output: **{fo.Length}** byte(s)");
+                }
+                sb.AppendLine();
+
+                if (!Directory.Exists(problem.Temp)) Directory.CreateDirectory(problem.Temp);
+
+                var output = Path.Join(problem.Temp, "preview.html");
+
+                const string HTMLPre = @"<!DOCTYPE html>
+    <html>
+    <head>
+        <meta http-equiv=""Content-type"" content=""text/html;charset=UTF-8"">
+        <title>generator-oj-problem</title>
+        <link rel=""stylesheet"" href=""https://cdn.jsdelivr.net/gh/Microsoft/vscode/extensions/markdown-language-features/media/markdown.css"">
+        <link rel=""stylesheet"" href=""https://cdn.jsdelivr.net/gh/Microsoft/vscode/extensions/markdown-language-features/media/highlight.css"">
+        <style>
+.task-list-item { list-style-type: none; } .task-list-item-checkbox { margin-left: -20px; vertical-align: middle; }
+</style>
+        <style>
+            body {
+                font-family: -apple-system, BlinkMacSystemFont, 'Segoe WPC', 'Segoe UI', 'Ubuntu', 'Droid Sans', sans-serif;
+                font-size: 14px;
+                line-height: 1.6;
+            }
+        </style>
+    </head>
+    <body>
+    #body
+    </body>
+</html>";
+
+                WriteAll(output, HTMLPre.Replace("#body", Markdown.ToHtml(sb.ToString())));
+                ConsoleUI.Write(new OutputText($"Open this generated file: {output} .", true));
+            }
+
+            void PreviewInCLI(ProblemPath problem)
+            {
                 var config = JsonConvert.DeserializeObject<ProblemProfile>(ReadAll(problem.Profile));
 
                 ConsoleUI.WriteInfo(new OutputText("Metadata", true));
@@ -158,10 +266,6 @@ namespace gop
                     ConsoleUI.Write(new OutputText($"  Length of output: {fo.Length} byte(s)", true));
                 }
             }
-            catch (Exception ex)
-            {
-                ConsoleUI.ShowException(ex);
-            }
         }
 
         static List<Issue> Check()
@@ -211,7 +315,7 @@ namespace gop
                 case OnlineJudge.HustOJ:
                     profile.Platform = "hustoj";
                     pipeline = Adapters.HustOJ.Packer.UseDefault(pipeline, profile);
-                    
+
                     break;
                 default:
                     ConsoleUI.WriteError(new OutputText("Unsupported platform.", true));

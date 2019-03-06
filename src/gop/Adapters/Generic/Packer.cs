@@ -43,7 +43,7 @@ namespace gop.Adapters.Generic
                 if (File.Exists(filename)) File.Delete(filename);
 
                 pipe.SetFlag(ID_OutputFile, filename);
-                pipe.SetFlag(ID_Archive, ZipFile.Open(filename, ZipArchiveMode.Create, Encoding.UTF8));
+                pipe.SetFlag(ID_Archive, ZipFile.Open(filename, ZipArchiveMode.Create, UTF8WithoutBOM));
 
                 return problem;
             });
@@ -83,23 +83,23 @@ namespace gop.Adapters.Generic
                 var arc = pipe.GetFlag<ZipArchive>(ID_Archive);
 
                 var descriptionEntry = arc.CreateEntry(PF_Description);
-                using (StreamWriter sw = new StreamWriter(descriptionEntry.Open(), Encoding.UTF8))
+                using (StreamWriter sw = new StreamWriter(descriptionEntry.Open(), UTF8WithoutBOM))
                     sw.WriteLine(Markdown.ToHtml(ReadAll(problem.Description)));
 
                 var inputEntry = arc.CreateEntry(PF_Input);
-                using (StreamWriter sw = new StreamWriter(inputEntry.Open(), Encoding.UTF8))
+                using (StreamWriter sw = new StreamWriter(inputEntry.Open(), UTF8WithoutBOM))
                     sw.WriteLine(Markdown.ToHtml(ReadAll(problem.Input)));
 
                 var outputEntry = arc.CreateEntry(PF_Output);
-                using (StreamWriter sw = new StreamWriter(outputEntry.Open(), Encoding.UTF8))
+                using (StreamWriter sw = new StreamWriter(outputEntry.Open(), UTF8WithoutBOM))
                     sw.WriteLine(Markdown.ToHtml(ReadAll(problem.Output)));
 
                 var hintEntry = arc.CreateEntry(PF_Hint);
-                using (StreamWriter sw = new StreamWriter(hintEntry.Open(), Encoding.UTF8))
+                using (StreamWriter sw = new StreamWriter(hintEntry.Open(), UTF8WithoutBOM))
                     sw.WriteLine(Markdown.ToHtml(ReadAll(problem.Hint)));
 
                 var sourceEntry = arc.CreateEntry(PF_Source);
-                using (StreamWriter sw = new StreamWriter(sourceEntry.Open(), Encoding.UTF8))
+                using (StreamWriter sw = new StreamWriter(sourceEntry.Open(), UTF8WithoutBOM))
                     sw.WriteLine(ReadAll(problem.Source));
 
                 return problem;
@@ -114,23 +114,23 @@ namespace gop.Adapters.Generic
                 var arc = pipe.GetFlag<ZipArchive>(ID_Archive);
 
                 var descriptionEntry = arc.CreateEntry(PF_Description);
-                using (StreamWriter sw = new StreamWriter(descriptionEntry.Open(), Encoding.UTF8))
+                using (StreamWriter sw = new StreamWriter(descriptionEntry.Open(), UTF8WithoutBOM))
                     sw.WriteLine(ReadAll(problem.Description));
 
                 var inputEntry = arc.CreateEntry(PF_Input);
-                using (StreamWriter sw = new StreamWriter(inputEntry.Open(), Encoding.UTF8))
+                using (StreamWriter sw = new StreamWriter(inputEntry.Open(), UTF8WithoutBOM))
                     sw.WriteLine(ReadAll(problem.Input));
 
                 var outputEntry = arc.CreateEntry(PF_Output);
-                using (StreamWriter sw = new StreamWriter(outputEntry.Open(), Encoding.UTF8))
+                using (StreamWriter sw = new StreamWriter(outputEntry.Open(), UTF8WithoutBOM))
                     sw.WriteLine(ReadAll(problem.Output));
 
                 var hintEntry = arc.CreateEntry(PF_Hint);
-                using (StreamWriter sw = new StreamWriter(hintEntry.Open(), Encoding.UTF8))
+                using (StreamWriter sw = new StreamWriter(hintEntry.Open(), UTF8WithoutBOM))
                     sw.WriteLine(ReadAll(problem.Hint));
 
                 var sourceEntry = arc.CreateEntry(PF_Source);
-                using (StreamWriter sw = new StreamWriter(sourceEntry.Open(), Encoding.UTF8))
+                using (StreamWriter sw = new StreamWriter(sourceEntry.Open(), UTF8WithoutBOM))
                     sw.WriteLine(ReadAll(problem.Source));
 
                 return problem;
@@ -153,13 +153,19 @@ namespace gop.Adapters.Generic
         {
             return pipeline.Use((pipe, problem) =>
             {
-                ConsoleUI.Write(new OutputText("  Copy samples...", true));
+                Write(new OutputText("  Copy samples...", true));
                 var arc = pipe.GetFlag<ZipArchive>(ID_Archive);
 
                 foreach (var u in problem.GetSamples())
                 {
-                    arc.CreateEntryFromFile(u.InputFile, Path.Join(PD_Samples, ProblemPath.GetTestInput(u.Name)));
-                    arc.CreateEntryFromFile(u.OutputFile, Path.Join(PD_Samples, ProblemPath.GetTestOutput(u.Name)));
+                    var inEntry = arc.CreateEntry(Path.Join(PD_Samples, ProblemPath.GetTestInput(u.Name)));
+                    using (StreamWriter sw = new StreamWriter(inEntry.Open(), UTF8WithoutBOM))
+                    using (StreamReader sr = File.OpenText(u.InputFile))
+                        ConvertToLF(sr, sw);
+                    var outEntry = arc.CreateEntry(Path.Join(PD_Samples, ProblemPath.GetTestOutput(u.Name)));
+                    using (StreamWriter sw = new StreamWriter(outEntry.Open(), UTF8WithoutBOM))
+                    using (StreamReader sr = File.OpenText(u.OutputFile))
+                        ConvertToLF(sr, sw);
                 }
 
                 return problem;
@@ -173,16 +179,20 @@ namespace gop.Adapters.Generic
                 Write(new OutputText("  Copy tests...", true));
                 var arc = pipe.GetFlag<ZipArchive>(ID_Archive);
 
-                var testsEntry = arc.CreateEntry(PF_Tests);
-
                 string tests = Path.Join(problem.Temp, PF_Tests);
                 if (File.Exists(tests)) File.Delete(tests);
-                using (var testarc = ZipFile.Open(tests, ZipArchiveMode.Create, Encoding.UTF8))
+                using (var testarc = ZipFile.Open(tests, ZipArchiveMode.Create, UTF8WithoutBOM))
                 {
                     foreach (var u in problem.GetTests())
                     {
-                        testarc.CreateEntryFromFile(u.InputFile, ProblemPath.GetTestInput(u.Name));
-                        testarc.CreateEntryFromFile(u.OutputFile, ProblemPath.GetTestOutput(u.Name));
+                        var inEntry = testarc.CreateEntry(Path.Join(PD_Samples, ProblemPath.GetTestInput(u.Name)));
+                        using (StreamWriter sw = new StreamWriter(inEntry.Open(), UTF8WithoutBOM))
+                        using (StreamReader sr = File.OpenText(u.InputFile))
+                            ConvertToLF(sr, sw);
+                        var outEntry = testarc.CreateEntry(Path.Join(PD_Samples, ProblemPath.GetTestOutput(u.Name)));
+                        using (StreamWriter sw = new StreamWriter(outEntry.Open(), UTF8WithoutBOM))
+                        using (StreamReader sr = File.OpenText(u.OutputFile))
+                            ConvertToLF(sr, sw);
                     }
                 }
 
@@ -199,7 +209,7 @@ namespace gop.Adapters.Generic
                 var arc = pipe.GetFlag<ZipArchive>(ID_Archive);
 
                 string data = Path.Join(problem.Temp, PF_Extra);
-                ZipFile.CreateFromDirectory(problem.Extra, data, CompressionLevel.Fastest, false, Encoding.UTF8);
+                ZipFile.CreateFromDirectory(problem.Extra, data, CompressionLevel.Fastest, false, UTF8WithoutBOM);
                 arc.CreateEntryFromFile(data, PF_Extra);
 
                 return problem;
@@ -214,7 +224,7 @@ namespace gop.Adapters.Generic
                 var arc = pipe.GetFlag<ZipArchive>(ID_Archive);
 
                 var lintEntry = arc.CreateEntry(PF_Issues);
-                using (StreamWriter sw = new StreamWriter(lintEntry.Open(), Encoding.UTF8))
+                using (StreamWriter sw = new StreamWriter(lintEntry.Open(), UTF8WithoutBOM))
                     sw.WriteLine(JsonConvert.SerializeObject(lints, Formatting.Indented));
 
                 return problem;
@@ -229,7 +239,7 @@ namespace gop.Adapters.Generic
                 var arc = pipe.GetFlag<ZipArchive>(ID_Archive);
 
                 var packageEntry = arc.CreateEntry(PF_PackageConfig);
-                using (StreamWriter sw = new StreamWriter(packageEntry.Open(), Encoding.UTF8))
+                using (StreamWriter sw = new StreamWriter(packageEntry.Open(), UTF8WithoutBOM))
                     sw.WriteLine(JsonConvert.SerializeObject(pipe.GetFlag<PackageProfile>(ID_Package), Formatting.Indented));
 
                 return problem;

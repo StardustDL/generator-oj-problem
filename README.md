@@ -34,6 +34,8 @@ $ ../gop check
 6. If you want to preview your problem, use this command:
 ```sh
 $ ../gop preview
+# preview by HTML
+$ ../gop preview --html
 ```
 7. After you fix up all **errors** and **warnings**, use this command to pack your problem and then you can submit the package:
 ```sh
