@@ -102,7 +102,7 @@ namespace gop.Problems
 
         public void Initialize()
         {
-            File.WriteAllText(Profile, JsonConvert.SerializeObject(new ProblemProfile { Name = "", Author = "", TimeLimit = 1, MemoryLimit = 128 }, Formatting.Indented), Encoding.UTF8);
+            File.WriteAllText(Profile, JsonConvert.SerializeObject(new ProblemProfile { Name = "", Author = "", TimeLimit = 0, MemoryLimit = 0, StdRun = new string[0] }, Formatting.Indented), Encoding.UTF8);
 
             Directory.CreateDirectory(Descriptions);
             File.WriteAllText(Description, "", Encoding.UTF8);

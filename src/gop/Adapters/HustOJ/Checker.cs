@@ -17,7 +17,7 @@ namespace gop.Adapters.HustOJ
 
         public static PPipeline UseDefault(this PPipeline pipeline)
         {
-            return pipeline.UseInitial().UseConfig().UseDescriptions().UseSamples().UseTests();
+            return pipeline.UseInitial().UseProfile().UseDescriptions().UseSamples().UseTests();
         }
     }
 }

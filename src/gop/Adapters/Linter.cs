@@ -13,31 +13,33 @@ namespace gop.Adapters
             return File.ReadAllText(path, Encoding.UTF8);
         }
 
-        public static IEnumerable<Issue> Config(ProblemProfile config)
+        public static IEnumerable<Issue> Profile(ProblemProfile profile)
         {
-            if (String.IsNullOrWhiteSpace(config.Name))
+            if (String.IsNullOrWhiteSpace(profile.Name))
                 yield return new Issue(IssueLevel.Error, "The name of the problem is missing.");
-            if (String.IsNullOrWhiteSpace(config.Author))
+            if (String.IsNullOrWhiteSpace(profile.Author))
                 yield return new Issue(IssueLevel.Error, "The author of the problem is missing.");
-            if (config.TimeLimit == 0)
+            if (profile.TimeLimit == 0)
                 yield return new Issue(IssueLevel.Error, "The time limit cannot be 0.");
-            if (config.MemoryLimit == 0)
+            if (profile.MemoryLimit == 0)
                 yield return new Issue(IssueLevel.Error, "The memory limit cannot be 0.");
+            if (profile.StdRun == null || profile.StdRun.Length == 0)
+                yield return new Issue(IssueLevel.Error, "The command to run standard program is missing.");
         }
 
-        public static IEnumerable<Issue> Description(ProblemPath problem)
+        public static IEnumerable<Issue> Descriptions(ProblemPath problem)
         {
-            if (!File.Exists(problem.Description) || String.IsNullOrWhiteSpace(ReadAll(problem.Description)))
+            if (!File.Exists(problem.Description) || string.IsNullOrWhiteSpace(ReadAll(problem.Description)))
                 yield return new Issue(IssueLevel.Error, "The description of the problem is missing.", problem.Description);
-            if (!File.Exists(problem.Input) || String.IsNullOrWhiteSpace(ReadAll(problem.Input)))
+            if (!File.Exists(problem.Input) || string.IsNullOrWhiteSpace(ReadAll(problem.Input)))
                 yield return new Issue(IssueLevel.Error, "The input description of the problem is missing.", problem.Input);
-            if (!File.Exists(problem.Output) || String.IsNullOrWhiteSpace(ReadAll(problem.Output)))
+            if (!File.Exists(problem.Output) || string.IsNullOrWhiteSpace(ReadAll(problem.Output)))
                 yield return new Issue(IssueLevel.Error, "The output description of the problem is missing.", problem.Output);
-            if (!File.Exists(problem.Source) || String.IsNullOrWhiteSpace(ReadAll(problem.Source)))
+            if (!File.Exists(problem.Source) || string.IsNullOrWhiteSpace(ReadAll(problem.Source)))
                 yield return new Issue(IssueLevel.Error, "The source of the problem is missing. If it's original, write original.", problem.Source);
-            if (!File.Exists(problem.Hint) || String.IsNullOrWhiteSpace(ReadAll(problem.Hint)))
+            if (!File.Exists(problem.Hint) || string.IsNullOrWhiteSpace(ReadAll(problem.Hint)))
                 yield return new Issue(IssueLevel.Info, "The hint of the problem is missing.", problem.Hint);
-            if (!File.Exists(problem.StandardProgram) || String.IsNullOrWhiteSpace(ReadAll(problem.StandardProgram)))
+            if (!File.Exists(problem.StandardProgram) || string.IsNullOrWhiteSpace(ReadAll(problem.StandardProgram)))
                 yield return new Issue(IssueLevel.Error, "The standard program of the problem is missing.", problem.StandardProgram);
         }
 

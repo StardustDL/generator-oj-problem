@@ -33,25 +33,25 @@ namespace gop
                 Handler = CommandHandler.Create(() => { Init(); })
             };
 
-            var checkCommand = new Command("check", "Check whether the problem is available to pack.")
+            var checkCommand = new Command("check", "Check whether the problem is available to pack.");
+            checkCommand.AddOption(new Option("--disable-local-judger", "Disable local judging for check", new Argument<bool>(false)));
+            checkCommand.Handler = CommandHandler.Create((bool disableLocalJudger) =>
             {
-                Handler = CommandHandler.Create(() =>
+                if (Check(!disableLocalJudger).Any(x => x.Level == IssueLevel.Error))
                 {
-                    if (Check().Any(x => x.Level == IssueLevel.Error))
-                    {
-                        ConsoleUI.WriteError(new OutputText("Problem checking failed.", true));
-                    }
-                    else
-                    {
-                        ConsoleUI.WriteSuccess(new OutputText("Problem checking passed.", true));
-                    }
-                })
-            };
+                    ConsoleUI.WriteError(new OutputText("Problem checking failed.", true));
+                }
+                else
+                {
+                    ConsoleUI.WriteSuccess(new OutputText("Problem checking passed.", true));
+                }
+            });
 
             var packCommand = new Command("pack", "Pack the problem into one package to submit.");
             packCommand.AddOption(new Option("--force", "Pack although checking failing.", new Argument<bool>(false)));
+            packCommand.AddOption(new Option("--disable-local-judger", "Disable local judging for check", new Argument<bool>(false)));
             packCommand.AddOption(new Option(new string[] { "--platform", "-p" }, "The target platform.", new Argument<OnlineJudge>()));
-            packCommand.Handler = CommandHandler.Create((bool force, OnlineJudge platform) => { Pack(platform, !force); });
+            packCommand.Handler = CommandHandler.Create((bool force, bool disableLocalJudger, OnlineJudge platform) => { Pack(platform, !force, !disableLocalJudger); });
 
             var previewCommand = new Command("preview", "Preview the problem.");
             previewCommand.AddOption(new Option("--html", "Generate an HTML document for previewing.", new Argument<bool>(false)));
@@ -161,6 +161,11 @@ namespace gop
                 sb.AppendLine(ReadAll(problem.Hint));
                 sb.AppendLine();
 
+                sb.AppendLine("# Source");
+                sb.AppendLine();
+                sb.AppendLine(ReadAll(problem.Source));
+                sb.AppendLine();
+
                 sb.AppendLine("# Tests");
                 sb.AppendLine();
                 var tests = problem.GetTests().ToArray();
@@ -254,6 +259,11 @@ namespace gop
                 ConsoleUI.Write(new OutputText(ReadAll(problem.Hint), true));
                 Console.WriteLine();
 
+                ConsoleUI.WriteInfo(new OutputText("Source", true));
+                Console.WriteLine();
+                ConsoleUI.Write(new OutputText(ReadAll(problem.Source), true));
+                Console.WriteLine();
+
                 var tests = problem.GetTests().ToArray();
                 ConsoleUI.WriteInfo(new OutputText($"Tests: found {tests.Length} test(s)", true));
                 Console.WriteLine();
@@ -268,11 +278,13 @@ namespace gop
             }
         }
 
-        static List<Issue> Check()
+        static List<Issue> Check(bool withLocalJudge = true)
         {
             var pipeline = new Pipeline<ProblemPath, List<Issue>>(Load());
 
             pipeline = Adapters.HustOJ.Checker.UseDefault(pipeline);
+            if (withLocalJudge)
+                pipeline = Adapters.Generic.Checker.UseLocalJudger(pipeline);
 
             var result = pipeline.Consume();
             if (result.IsOk()) return result.Result;
@@ -283,11 +295,11 @@ namespace gop
             }
         }
 
-        static void Pack(OnlineJudge platform, bool check = true)
+        static void Pack(OnlineJudge platform, bool check = true, bool withLocalJudge = true)
         {
             ConsoleUI.WriteInfo(new OutputText("Checking before pack...", true));
 
-            var issues = Check().ToList();
+            var issues = Check(withLocalJudge).ToList();
 
             if (check)
             {
