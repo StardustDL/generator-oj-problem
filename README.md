@@ -15,13 +15,13 @@ $ ../gop init
 4. Modify the files in the directory `problem`.
    1. `config.json` Config information
    2. `descriptions/` All text for description. 
-      1. Supports plain [CommonMark](https://commonmark.org/) by built-in render. 
+      1. The file with extension `.md` means it supports plain [CommonMark](https://commonmark.org/) by built-in render. 
          - **Attention**: No LaTex supports.
       2. `descriptions/description.md` Description
       3. `descriptions/input.md` Description of input
       4. `descriptions/output.md` Description of output
       5. `descriptions/hint.md` Hint
-      6. `descriptions/source.md` Source
+      6. `descriptions/source.txt` Source
    3. `samples/` Sample data
       1. `samples/test0.in` Input of sample
       2. `samples/test0.out` Output of sample

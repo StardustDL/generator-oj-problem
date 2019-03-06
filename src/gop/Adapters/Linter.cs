@@ -2,8 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
+using gop.Problems;
 
-namespace gop
+namespace gop.Adapters
 {
     public static class Linter
     {
@@ -12,7 +13,7 @@ namespace gop
             return File.ReadAllText(path, Encoding.UTF8);
         }
 
-        public static IEnumerable<Issue> Config(ProblemConfig config)
+        public static IEnumerable<Issue> Config(ProblemProfile config)
         {
             if (String.IsNullOrWhiteSpace(config.Name))
                 yield return new Issue(IssueLevel.Error, "The name of the problem is missing.");

@@ -1,4 +1,4 @@
-﻿namespace gop
+﻿namespace gop.Adapters
 {
     public enum IssueLevel
     {

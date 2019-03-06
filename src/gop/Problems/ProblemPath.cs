@@ -3,12 +3,12 @@ using System.IO;
 using System.Text;
 using Newtonsoft.Json;
 
-namespace gop
+namespace gop.Problems
 {
     public class ProblemPath
     {
-        public const string F_Config = "config.json", F_Description = "description.md", F_Input = "input.md", F_Output = "output.md", F_Hint = "hint.md", F_StandardProgram = "std.cpp", F_LintLog = "lints.json", F_Package = "package.json", F_Source = "sources.md";
-        public const string D_Test = "tests", D_Sample = "samples", D_Description = "descriptions", D_SourceCode = "src", D_Target = "target", D_Temp = "temp", D_Log = "log", D_Extra = "extra";
+        public const string F_Profile = "profile.json", F_Description = "description.md", F_Input = "input.md", F_Output = "output.md", F_Hint = "hint.md", F_StandardProgram = "std.cpp", F_Source = "source.txt";
+        public const string D_Tests = "tests", D_Samples = "samples", D_Descriptions = "descriptions", D_SourceCode = "src", D_Target = "target", D_Temp = "temp", D_Extra = "extra";
         public const string E_Input = ".in", E_Output = ".out";
 
         public static string GetTestInput(string name)
@@ -23,11 +23,9 @@ namespace gop
 
         public string Root { get; private set; }
 
-        public string Config { get; private set; }
+        public string Profile { get; private set; }
 
         public string Target { get; private set; }
-
-        public string Log { get; private set; }
 
         public string Temp { get; private set; }
 
@@ -48,10 +46,6 @@ namespace gop
         public string Samples { get; private set; }
 
         public string Tests { get; private set; }
-
-        public string LintLog { get; private set; }
-
-        public string Package { get; private set; }
 
         public string Extra { get; private set; }
 
@@ -90,28 +84,25 @@ namespace gop
         public ProblemPath(string path)
         {
             Root = path;
-            Config = Path.Join(Root, F_Config);
+            Profile = Path.Join(Root, F_Profile);
             Target = Path.Join(Root, D_Target);
             Temp = Path.Join(Root, D_Temp);
-            Log = Path.Join(Root, D_Log);
-            Descriptions = Path.Join(Root, D_Description);
+            Descriptions = Path.Join(Root, D_Descriptions);
             Description = Path.Join(Descriptions, F_Description);
             Input = Path.Join(Descriptions, F_Input);
             Output = Path.Join(Descriptions, F_Output);
             Hint = Path.Join(Descriptions, F_Hint);
             SourceCode = Path.Join(Root, D_SourceCode);
             StandardProgram = Path.Join(SourceCode, F_StandardProgram);
-            Samples = Path.Join(Root, D_Sample);
-            Tests = Path.Join(Root, D_Test);
-            LintLog = Path.Join(Log, F_LintLog);
-            Package = Path.Join(Root, F_Package);
+            Samples = Path.Join(Root, D_Samples);
+            Tests = Path.Join(Root, D_Tests);
             Extra = Path.Join(Root, D_Extra);
             Source = Path.Join(Descriptions, F_Source);
         }
 
         public void Initialize()
         {
-            File.WriteAllText(Config, JsonConvert.SerializeObject(new ProblemConfig { Name = "", Author = "", TimeLimit = 1, MemoryLimit = 128 }, Formatting.Indented), Encoding.UTF8);
+            File.WriteAllText(Profile, JsonConvert.SerializeObject(new ProblemProfile { Name = "", Author = "", TimeLimit = 1, MemoryLimit = 128 }, Formatting.Indented), Encoding.UTF8);
 
             Directory.CreateDirectory(Descriptions);
             File.WriteAllText(Description, "", Encoding.UTF8);

@@ -1,6 +1,6 @@
-﻿namespace gop
+﻿namespace gop.Problems
 {
-    public class ProblemConfig
+    public class ProblemProfile
     {
         public string Name { get; set; }
 

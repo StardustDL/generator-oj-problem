@@ -1,8 +1,8 @@
-﻿using System;
+﻿using gop.Adapters;
+using System;
 using System.Collections.Generic;
-using System.Text;
 
-namespace gop.Helper
+namespace gop.Helpers
 {
     internal struct OutputText
     {
@@ -23,8 +23,31 @@ namespace gop.Helper
         }
     }
 
-    internal class ConsoleUI
+    internal static class ConsoleUI
     {
+        public static void ShowException(Exception ex)
+        {
+            WriteError(new OutputText("Failed: ", false));
+            Console.WriteLine($"An error has occurred: {ex.Message}");
+        }
+
+        public static void ShowIssue(Issue issue, string indent = "")
+        {
+            switch (issue.Level)
+            {
+                case IssueLevel.Error:
+                    ConsoleUI.WriteError(new OutputText(indent + "[Error] ", false));
+                    break;
+                case IssueLevel.Warning:
+                    ConsoleUI.WriteWarning(new OutputText(indent + "[Warning] ", false));
+                    break;
+                case IssueLevel.Info:
+                    ConsoleUI.WriteInfo(new OutputText(indent + "[Info] ", false));
+                    break;
+            }
+            Write(new OutputText(issue.Content, true));
+        }
+
         public static void Write(OutputText item)
         {
             var oldfc = Console.ForegroundColor;
