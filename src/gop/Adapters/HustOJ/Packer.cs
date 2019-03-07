@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using gop.Adapters.Generic;
+﻿using gop.Adapters.Generic;
 using PPipeline = gop.Adapters.Pipeline<gop.Problems.ProblemPath, string>;
 
 namespace gop.Adapters.HustOJ

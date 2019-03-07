@@ -1,4 +1,4 @@
-﻿namespace gop.Adapters
+﻿namespace gop
 {
     public enum IssueLevel
     {
@@ -9,7 +9,7 @@
 
     public class Issue
     {
-        public Issue(IssueLevel level, string content,string addition = "")
+        public Issue(IssueLevel level, string content, string addition = "")
         {
             Level = level;
             Content = content;

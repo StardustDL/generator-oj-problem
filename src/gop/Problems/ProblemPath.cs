@@ -1,7 +1,8 @@
-﻿using System.Collections.Generic;
+﻿using gop.Helpers;
+using Newtonsoft.Json;
+using System.Collections.Generic;
 using System.IO;
 using System.Text;
-using Newtonsoft.Json;
 
 namespace gop.Problems
 {
@@ -19,6 +20,11 @@ namespace gop.Problems
         public static string GetTestOutput(string name)
         {
             return $"test{name}{E_Output}";
+        }
+
+        public ProblemProfile GetProfile()
+        {
+            return JsonConvert.DeserializeObject<ProblemProfile>(TextIO.ReadAll(Profile));
         }
 
         public string Root { get; private set; }

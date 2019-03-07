@@ -1,6 +1,5 @@
 ﻿using gop.Adapters;
 using System;
-using System.Collections.Generic;
 
 namespace gop.Helpers
 {

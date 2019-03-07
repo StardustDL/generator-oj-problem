@@ -1,8 +1,8 @@
+using gop.Problems;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
-using gop.Problems;
 
 namespace gop.Adapters
 {

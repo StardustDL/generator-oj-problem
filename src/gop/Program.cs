@@ -1,5 +1,6 @@
 ﻿using gop.Adapters;
 using gop.Helpers;
+using gop.Judgers;
 using gop.Problems;
 using Markdig;
 using Newtonsoft.Json;
@@ -25,8 +26,10 @@ namespace gop
         static int Main(string[] args)
         {
             // Add them to the root command
-            var rootCommand = new RootCommand();
-            rootCommand.Description = "A CLI tool to generate Online-Judge Problem. Powered by StardustDL. Source codes at https://github.com/StardustDL/generator-oj-problem";
+            var rootCommand = new RootCommand
+            {
+                Description = "A CLI tool to generate Online-Judge Problem. Powered by StardustDL. Source codes at https://github.com/StardustDL/generator-oj-problem ."
+            };
 
             var initCommand = new Command("init", "Initialize the problem. The current directory must be empty.")
             {
@@ -34,7 +37,7 @@ namespace gop
             };
 
             var checkCommand = new Command("check", "Check whether the problem is available to pack.");
-            checkCommand.AddOption(new Option("--disable-local-judger", "Disable local judging for check", new Argument<bool>(false)));
+            checkCommand.AddOption(new Option("--disable-local-judger", "Disable local judging for check.", new Argument<bool>(false)));
             checkCommand.Handler = CommandHandler.Create((bool disableLocalJudger) =>
             {
                 if (Check(!disableLocalJudger).Any(x => x.Level == IssueLevel.Error))
@@ -49,7 +52,7 @@ namespace gop
 
             var packCommand = new Command("pack", "Pack the problem into one package to submit.");
             packCommand.AddOption(new Option("--force", "Pack although checking failing.", new Argument<bool>(false)));
-            packCommand.AddOption(new Option("--disable-local-judger", "Disable local judging for check", new Argument<bool>(false)));
+            packCommand.AddOption(new Option("--disable-local-judger", "Disable local judging for check.", new Argument<bool>(false)));
             packCommand.AddOption(new Option(new string[] { "--platform", "-p" }, "The target platform.", new Argument<OnlineJudge>()));
             packCommand.Handler = CommandHandler.Create((bool force, bool disableLocalJudger, OnlineJudge platform) => { Pack(platform, !force, !disableLocalJudger); });
 
@@ -57,13 +60,96 @@ namespace gop
             previewCommand.AddOption(new Option("--html", "Generate an HTML document for previewing.", new Argument<bool>(false)));
             previewCommand.Handler = CommandHandler.Create((bool html) => { Preview(html); });
 
+            var genCommand = new Command("gen", "Generate data.");
+            genCommand.AddOption(new Option(new string[] { "-o", "--output" }, "Generate output data for samples and tests.", new Argument<bool>(true)));
+            genCommand.Handler = CommandHandler.Create((bool output) => { Gen(output); });
+
             rootCommand.Add(initCommand);
             rootCommand.Add(packCommand);
             rootCommand.Add(checkCommand);
             rootCommand.Add(previewCommand);
+            rootCommand.Add(genCommand);
 
             // Parse the incoming args and invoke the handler
             return rootCommand.InvokeAsync(args).Result;
+        }
+
+        static void Gen(bool output)
+        {
+            var problem = Load();
+
+            if (output)
+            {
+                ConsoleUI.Write(new OutputText("Generating outputs...", true));
+                bool ShowState(JudgeState state)
+                {
+                    switch (state)
+                    {
+                        case JudgeState.Accept:
+                        case JudgeState.WrongAnswer:
+                            ConsoleUI.WriteSuccess(new OutputText("Success", true));
+                            return true;
+                        case JudgeState.MemoryLimitError:
+                            ConsoleUI.WriteError(new OutputText("Memory Limit Error", true));
+                            return false;
+                        case JudgeState.TimeLimitError:
+                            ConsoleUI.WriteError(new OutputText("Time Limit Error", true));
+                            return false;
+                        case JudgeState.RuntimeError:
+                            ConsoleUI.WriteError(new OutputText("Runtime Error", true));
+                            return false;
+                        case JudgeState.SystemError:
+                            ConsoleUI.WriteError(new OutputText("System Error", true));
+                            return false;
+                        default:
+                            ConsoleUI.WriteError(new OutputText("Unexcepted", true));
+                            return false;
+                    }
+                }
+                try
+                {
+                    var profile = problem.GetProfile();
+
+                    foreach (var t in problem.GetSamples())
+                    {
+                        ConsoleUI.Write(new OutputText($"  Sample {t.Name}...", false));
+                        var result = Judger.Judge($"sample {t.Name}", profile.StdRun, TimeSpan.FromSeconds(profile.TimeLimit), profile.MemoryLimit * 1024 * 1024, ReadAll(t.InputFile), new string[0]);
+                        if (ShowState(result.State))
+                        {
+                            File.WriteAllLines(t.OutputFile, result.Outputs);
+                        }
+                        else
+                        {
+                            foreach (var v in result.Issues)
+                            {
+                                ConsoleUI.ShowIssue(v, "    ");
+                            }
+                        }
+                    }
+
+                    foreach (var t in problem.GetTests())
+                    {
+                        ConsoleUI.Write(new OutputText($"  Test {t.Name}...", false));
+                        var result = Judger.Judge($"test {t.Name}", profile.StdRun, TimeSpan.FromSeconds(profile.TimeLimit), profile.MemoryLimit * 1024 * 1024, ReadAll(t.InputFile), new string[0]);
+                        if (ShowState(result.State))
+                        {
+                            File.WriteAllLines(t.OutputFile, result.Outputs);
+                        }
+                        else
+                        {
+                            foreach (var v in result.Issues)
+                            {
+                                ConsoleUI.ShowIssue(v, "    ");
+                            }
+                        }
+                    }
+                    ConsoleUI.WriteSuccess(new OutputText("Generating succeeded.", true));
+                }
+                catch (Exception ex)
+                {
+                    ConsoleUI.ShowException(ex);
+                }
+            }
         }
 
         static ProblemPath Load()
@@ -113,7 +199,7 @@ namespace gop
 
             void PreviewInHTML(ProblemPath problem)
             {
-                var config = JsonConvert.DeserializeObject<ProblemProfile>(ReadAll(problem.Profile));
+                var config = problem.GetProfile();
 
                 StringBuilder sb = new StringBuilder();
 
@@ -214,7 +300,7 @@ namespace gop
 
             void PreviewInCLI(ProblemPath problem)
             {
-                var config = JsonConvert.DeserializeObject<ProblemProfile>(ReadAll(problem.Profile));
+                var config = problem.GetProfile();
 
                 ConsoleUI.WriteInfo(new OutputText("Metadata", true));
                 Console.WriteLine();
@@ -316,7 +402,7 @@ namespace gop
 
             PackageProfile profile = PackageProfile.Create();
             {
-                var propro = JsonConvert.DeserializeObject<ProblemProfile>(ReadAll(problem.Profile));
+                var propro = problem.GetProfile();
 
                 profile.Sign = $"Signed-{propro.Author}-{Assembly.GetExecutingAssembly().FullName}";
             }

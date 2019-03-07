@@ -1,15 +1,15 @@
 ﻿using gop.Helpers;
 using gop.Judgers;
 using gop.Problems;
-using Markdig;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text;
 using static gop.Helpers.ConsoleUI;
 using static gop.Helpers.TextIO;
-using PPipeline = gop.Adapters.Pipeline<gop.Problems.ProblemPath, System.Collections.Generic.List<gop.Adapters.Issue>>;
+using PPipeline = gop.Adapters.Pipeline<gop.Problems.ProblemPath, System.Collections.Generic.List<gop.Issue>>;
 
 namespace gop.Adapters.Generic
 {
@@ -45,7 +45,7 @@ namespace gop.Adapters.Generic
                 {
                     try
                     {
-                        config = JsonConvert.DeserializeObject<ProblemProfile>(ReadAll(problem.Profile));
+                        config = problem.GetProfile();
                     }
                     catch
                     {
@@ -184,66 +184,30 @@ namespace gop.Adapters.Generic
 
         public static PPipeline UseLocalJudger(this PPipeline pipeline)
         {
-            void TestOne(ProblemProfile profile, TestCasePath test, string name, List<Issue> ciss)
+            void ShowState(JudgeState state)
             {
-                try
+                switch (state)
                 {
-                    Runner runner = new Runner(new System.Diagnostics.ProcessStartInfo(profile.StdRun[0], string.Join(" ", profile.StdRun.Skip(1))))
-                    {
-                        TimeLimit = TimeSpan.FromSeconds(profile.TimeLimit),
-                        MemoryLimit = profile.MemoryLimit * 1024 * 1024,
-                        Input = ReadAll(test.InputFile),
-                    };
-                    runner.Run();
-                    switch (runner.State)
-                    {
-                        case RunnerState.Ended:
-                            {
-                                if (runner.ExitCode != 0)
-                                {
-                                    WriteError(new OutputText("Runtime Error: " + $"Exited with {runner.ExitCode}", true));
-                                    ciss.Add(new Issue(IssueLevel.Error, $"Runtime error for {name}."));
-                                }
-                                var expected = File.ReadAllLines(test.OutputFile).Select(x => x.TrimEnd('\r', '\n')).ToList();
-                                var real = runner.Output.Select(x => x.TrimEnd('\r', '\n')).ToList();
-                                var diff = Diff(expected, real);
-                                if (diff.Count != 0)
-                                {
-                                    WriteError(new OutputText("Wrong Answer", true));
-                                    foreach (var s in diff)
-                                    {
-                                        WriteError(new OutputText("    " + s, true));
-                                    }
-                                    ciss.Add(new Issue(IssueLevel.Error, $"Wrong answer for {name}."));
-                                }
-                                else
-                                {
-                                    WriteSuccess(new OutputText("Accept", true));
-                                }
-                                break;
-                            }
-                        case RunnerState.OutOfMemory:
-                            {
-                                var message = $"Used {runner.MaximumMemory} bytes, limit {profile.MemoryLimit * 1024 * 1024} bytes.";
-                                WriteError(new OutputText("Memory Limit Error: " + message, true));
-                                ciss.Add(new Issue(IssueLevel.Error, $"Memory limit error for {name}. {message}"));
-                                break;
-                            }
-                        case RunnerState.OutOfTime:
-                            {
-                                var message = $"Used {runner.RunningTime.TotalSeconds} seconds, limit {profile.TimeLimit} seconds.";
-                                WriteError(new OutputText("Time Limit Error: " + message, true));
-                                ciss.Add(new Issue(IssueLevel.Error, $"Time limit error for {name}. {message}"));
-                                break;
-                            }
-                        default:
-                            throw new Exception("The program doesn't stop.");
-                    }
-                }
-                catch (Exception ex)
-                {
-                    WriteError(new OutputText("System Error: " + ex.Message, true));
-                    ciss.Add(new Issue(IssueLevel.Error, $"System error for {name} with {ex.Message}."));
+                    case JudgeState.Accept:
+                        WriteSuccess(new OutputText("Accept", true));
+                        break;
+                    case JudgeState.MemoryLimitError:
+                        WriteError(new OutputText("Memory Limit Error", true));
+                        break;
+                    case JudgeState.TimeLimitError:
+                        WriteError(new OutputText("Time Limit Error", true));
+                        break;
+                    case JudgeState.RuntimeError:
+                        WriteError(new OutputText("Runtime Error", true));
+                        break;
+                    case JudgeState.SystemError:
+                        WriteError(new OutputText("System Error", true));
+                        break;
+                    case JudgeState.WrongAnswer:
+                        WriteError(new OutputText("Wrong Answer", true));
+                        break;
+                    default:
+                        throw new Exception("Unexcepted judge state: " + state.ToString());
                 }
             }
 
@@ -258,13 +222,17 @@ namespace gop.Adapters.Generic
                 foreach (var t in problem.GetSamples())
                 {
                     Write(new OutputText($"  Sample {t.Name}...", false));
-                    TestOne(profile, t, $"sample {t.Name}", ciss);
+                    var result = Judger.Judge($"sample {t.Name}", profile.StdRun, TimeSpan.FromSeconds(profile.TimeLimit), profile.MemoryLimit * 1024 * 1024, ReadAll(t.InputFile), File.ReadAllLines(t.OutputFile, Encoding.UTF8));
+                    ShowState(result.State);
+                    ciss.AddRange(result.Issues);
                 }
 
                 foreach (var t in problem.GetTests())
                 {
                     Write(new OutputText($"  Test {t.Name}...", false));
-                    TestOne(profile, t, $"test {t.Name}", ciss);
+                    var result = Judger.Judge($"test {t.Name}", profile.StdRun, TimeSpan.FromSeconds(profile.TimeLimit), profile.MemoryLimit * 1024 * 1024, ReadAll(t.InputFile), File.ReadAllLines(t.OutputFile, Encoding.UTF8));
+                    ShowState(result.State);
+                    ciss.AddRange(result.Issues);
                 }
 
                 pipe.Result.AddRange(ciss);

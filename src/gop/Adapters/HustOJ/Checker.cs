@@ -1,6 +1,6 @@
-﻿using System.Collections.Generic;
-using gop.Adapters.Generic;
-using PPipeline = gop.Adapters.Pipeline<gop.Problems.ProblemPath, System.Collections.Generic.List<gop.Adapters.Issue>>;
+﻿using gop.Adapters.Generic;
+using System.Collections.Generic;
+using PPipeline = gop.Adapters.Pipeline<gop.Problems.ProblemPath, System.Collections.Generic.List<gop.Issue>>;
 
 namespace gop.Adapters.HustOJ
 {

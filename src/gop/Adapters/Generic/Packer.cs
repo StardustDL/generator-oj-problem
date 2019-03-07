@@ -5,8 +5,6 @@ using Newtonsoft.Json;
 using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
-using System.Reflection;
-using System.Text;
 using static gop.Helpers.ConsoleUI;
 using static gop.Helpers.TextIO;
 using PPipeline = gop.Adapters.Pipeline<gop.Problems.ProblemPath, string>;
@@ -30,7 +28,7 @@ namespace gop.Adapters.Generic
             return pipeline.Use((pipe, problem) =>
             {
                 WriteInfo(new OutputText("Packing the problem...", true));
-                var config = JsonConvert.DeserializeObject<ProblemProfile>(ReadAll(problem.Profile));
+                var config = problem.GetProfile();
                 pipe.SetFlag(ID_Problem, config);
                 pipe.SetFlag(ID_Package, package);
                 Directory.CreateDirectory(problem.Target);
