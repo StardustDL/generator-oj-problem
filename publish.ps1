@@ -9,6 +9,8 @@ Write-Output "Building for osx-x64..."
 dotnet publish -c Release -r osx-x64
 
 Write-Output "Packing..."
+dotnet build -c Release
+dotnet pack -c Release
 Write-Output "Packing for win-x64..."
 Compress-Archive -Force -Path "./src/gop/bin/Release/netcoreapp2.2/win-x64/publish/*" -DestinationPath "./src/gop/bin/Release/builded/win-x64" -ErrorAction Stop
 Write-Output "Packing for win-x86..."
