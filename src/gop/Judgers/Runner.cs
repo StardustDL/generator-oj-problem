@@ -35,9 +35,13 @@ namespace gop.Judgers
 
         public long MaximumMemory => Math.Max(MaximumPagedMemorySize64, MaximumPeakPagedMemorySize64);
 
-        public TimeSpan RunningTime { get; private set; }
+        public TimeSpan RunningTime => StartTime - EndTime;
 
-        public int ExitCode => Process.ExitCode;
+        public DateTimeOffset StartTime { get; private set; }
+
+        public DateTimeOffset EndTime { get; private set; }
+
+        public int ExitCode { get; private set; }
 
         /// <summary>
         /// Gets if the app is running
@@ -94,23 +98,11 @@ namespace gop.Judgers
                     }
                 }
             };
-            Process.Exited += (sender, e) =>
-            {
-                RunningTime = DateTimeOffset.Now - Process.StartTime;
-                if (bwMemory?.IsBusy == true) bwMemory.CancelAsync();
-                Process.WaitForExit();
-
-                var output = new List<string>();
-                while (!Process.StandardOutput.EndOfStream)
-                    output.Add(Process.StandardOutput.ReadLine());
-                Output = output.ToArray();
-                var error = new List<string>();
-                while (!Process.StandardError.EndOfStream)
-                    error.Add(Process.StandardError.ReadLine());
-                Error = error.ToArray();
-            };
+            Process.Exited += Process_Exited;
 
             State = RunnerState.Running;
+
+            StartTime = DateTimeOffset.Now;
 
             Process.Start();
             Process.StandardInput.WriteLine(Input);
@@ -127,6 +119,30 @@ namespace gop.Judgers
                 State = RunnerState.OutOfTime;
                 Process.Kill();
                 Process.WaitForExit();
+            }
+        }
+
+        private void Process_Exited(object sender, EventArgs e)
+        {
+            try
+            {
+                EndTime = DateTimeOffset.Now;
+                ExitCode = Process.ExitCode;
+                if (bwMemory?.IsBusy == true) bwMemory.CancelAsync();
+                Process.WaitForExit();
+
+                var output = new List<string>();
+                while (!Process.StandardOutput.EndOfStream)
+                    output.Add(Process.StandardOutput.ReadLine());
+                Output = output.ToArray();
+                var error = new List<string>();
+                while (!Process.StandardError.EndOfStream)
+                    error.Add(Process.StandardError.ReadLine());
+                Error = error.ToArray();
+            }
+            catch
+            {
+
             }
         }
 

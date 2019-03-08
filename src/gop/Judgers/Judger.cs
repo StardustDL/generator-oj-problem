@@ -40,60 +40,62 @@ namespace gop.Judgers
             };
             try
             {
-                Runner runner = new Runner(new System.Diagnostics.ProcessStartInfo(executor[0], string.Join(" ", executor.Skip(1))))
+                using (var runner = new Runner(new System.Diagnostics.ProcessStartInfo(executor[0], string.Join(" ", executor.Skip(1))))
                 {
                     TimeLimit = timelimit,
                     MemoryLimit = memoryLimit,
                     Input = input,
-                };
-                runner.Run();
-                switch (runner.State)
+                })
                 {
-                    case RunnerState.Ended:
-                        {
-                            if (runner.ExitCode != 0)
+                    runner.Run();
+                    switch (runner.State)
+                    {
+                        case RunnerState.Ended:
                             {
-                                res.Issues.Add(new Issue(IssueLevel.Error, $"Runtime error for {name}: exited with {runner.ExitCode}."));
-                                res.State = JudgeState.RuntimeError;
+                                if (runner.ExitCode != 0)
+                                {
+                                    res.Issues.Add(new Issue(IssueLevel.Error, $"Runtime error for {name}: exited with {runner.ExitCode}."));
+                                    res.State = JudgeState.RuntimeError;
+                                    break;
+                                }
+                                var expected = standardOutput.Select(x => x.TrimEnd('\r', '\n')).ToList();
+                                var real = runner.Output.Select(x => x.TrimEnd('\r', '\n')).ToList();
+                                var diff = TextIO.Diff(expected, real);
+                                res.Outputs = real.ToArray();
+                                if (diff.Count != 0)
+                                {
+                                    foreach (var s in diff)
+                                        res.Issues.Add(new Issue(IssueLevel.Warning, $"Diff for {name}: {s}"));
+                                    res.Issues.Add(new Issue(IssueLevel.Error, $"Wrong answer for {name}."));
+                                    res.State = JudgeState.WrongAnswer;
+                                }
+                                else
+                                {
+                                    if (timelimit.TotalSeconds / runner.RunningTime.TotalSeconds < 2)
+                                        res.Issues.Add(new Issue(IssueLevel.Warning, $"The time limit is too thin for {name}. It used {runner.RunningTime.TotalSeconds} seconds"));
+                                    if ((double)memoryLimit / runner.MaximumMemory < 2)
+                                        res.Issues.Add(new Issue(IssueLevel.Warning, $"The memory limit is too thin for {name}. It used {runner.MaximumMemory} bytes"));
+                                    res.State = JudgeState.Accept;
+                                }
                                 break;
                             }
-                            var expected = standardOutput.Select(x => x.TrimEnd('\r', '\n')).ToList();
-                            var real = runner.Output.Select(x => x.TrimEnd('\r', '\n')).ToList();
-                            var diff = TextIO.Diff(expected, real);
-                            res.Outputs = real.ToArray();
-                            if (diff.Count != 0)
+                        case RunnerState.OutOfMemory:
                             {
-                                foreach (var s in diff)
-                                    res.Issues.Add(new Issue(IssueLevel.Warning, $"Diff for {name}: {s}"));
-                                res.Issues.Add(new Issue(IssueLevel.Error, $"Wrong answer for {name}."));
-                                res.State = JudgeState.WrongAnswer;
+                                var message = $"Used {runner.MaximumMemory} bytes, limit {memoryLimit} bytes.";
+                                res.Issues.Add(new Issue(IssueLevel.Error, $"Memory limit error for {name}. {message}"));
+                                res.State = JudgeState.MemoryLimitError;
+                                break;
                             }
-                            else
+                        case RunnerState.OutOfTime:
                             {
-                                if (timelimit.TotalSeconds / runner.RunningTime.TotalSeconds < 2)
-                                    res.Issues.Add(new Issue(IssueLevel.Warning, $"The time limit is too thin for {name}. It used {runner.RunningTime.TotalSeconds} seconds"));
-                                if ((double)memoryLimit / runner.MaximumMemory < 2)
-                                    res.Issues.Add(new Issue(IssueLevel.Warning, $"The memory limit is too thin for {name}. It used {runner.MaximumMemory} bytes"));
-                                res.State = JudgeState.Accept;
+                                var message = $"Used {runner.RunningTime.TotalSeconds} seconds, limit {timelimit.TotalSeconds} seconds.";
+                                res.Issues.Add(new Issue(IssueLevel.Error, $"Time limit error for {name}. {message}"));
+                                res.State = JudgeState.TimeLimitError;
+                                break;
                             }
-                            break;
-                        }
-                    case RunnerState.OutOfMemory:
-                        {
-                            var message = $"Used {runner.MaximumMemory} bytes, limit {memoryLimit} bytes.";
-                            res.Issues.Add(new Issue(IssueLevel.Error, $"Memory limit error for {name}. {message}"));
-                            res.State = JudgeState.MemoryLimitError;
-                            break;
-                        }
-                    case RunnerState.OutOfTime:
-                        {
-                            var message = $"Used {runner.RunningTime.TotalSeconds} seconds, limit {timelimit.TotalSeconds} seconds.";
-                            res.Issues.Add(new Issue(IssueLevel.Error, $"Time limit error for {name}. {message}"));
-                            res.State = JudgeState.TimeLimitError;
-                            break;
-                        }
-                    default:
-                        throw new Exception("The program doesn't stop.");
+                        default:
+                            throw new Exception("The program doesn't stop.");
+                    }
                 }
             }
             catch (Exception ex)

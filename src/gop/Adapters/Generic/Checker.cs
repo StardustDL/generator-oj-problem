@@ -15,8 +15,6 @@ namespace gop.Adapters.Generic
 {
     public static class Checker
     {
-        public const string ID_Problem = "problem";
-
         static bool IsPass(IEnumerable<Issue> issues, bool show = true, string indent = "")
         {
             bool flag = !issues.Any(x => x.Level == IssueLevel.Error);
@@ -62,7 +60,7 @@ namespace gop.Adapters.Generic
                 if (!IsPass(ciss, indent: "  "))
                     throw new Exception("Profile checking failed.");
 
-                pipe.SetFlag(ID_Problem, config);
+                pipe.Container.Set(config);
 
                 return problem;
             });
@@ -215,7 +213,7 @@ namespace gop.Adapters.Generic
             {
                 WriteInfo(new OutputText("Checking ", false));
                 Write(new OutputText("all data by local judger...", true));
-                var profile = pipe.GetFlag<ProblemProfile>(ID_Problem);
+                var profile = pipe.Container.Get<ProblemProfile>();
 
                 var ciss = new List<Issue>();
 

@@ -13,8 +13,6 @@ namespace gop.Adapters.Generic
 {
     public static class Packer
     {
-        public const string ID_Problem = "problem", ID_OutputFile = "output", ID_Archive = "archive", ID_Package = "package";
-
         #region Paths
 
         public static readonly string PF_ProblemConfig = "profile.json", PF_PackageConfig = "package.json", PF_Tests = "tests.zip", PF_Extra = "extra.zip";
@@ -29,8 +27,8 @@ namespace gop.Adapters.Generic
             {
                 WriteInfo(new OutputText("Packing the problem...", true));
                 var config = problem.GetProfile();
-                pipe.SetFlag(ID_Problem, config);
-                pipe.SetFlag(ID_Package, package);
+                pipe.Container.Set(config);
+                pipe.Container.Set(package);
                 Directory.CreateDirectory(problem.Target);
 
                 if (Directory.Exists(problem.Temp)) Directory.Delete(problem.Temp, true);
@@ -40,8 +38,8 @@ namespace gop.Adapters.Generic
                 string filename = Path.Join(problem.Target, _file);
                 if (File.Exists(filename)) File.Delete(filename);
 
-                pipe.SetFlag(ID_OutputFile, filename);
-                pipe.SetFlag(ID_Archive, ZipFile.Open(filename, ZipArchiveMode.Create, UTF8WithoutBOM));
+                pipe.Container.Set(filename);
+                pipe.Container.Set(ZipFile.Open(filename, ZipArchiveMode.Create, UTF8WithoutBOM));
 
                 return problem;
             });
@@ -53,10 +51,10 @@ namespace gop.Adapters.Generic
             {
                 Write(new OutputText("  Saving...", true));
 
-                var arc = pipe.GetFlag<ZipArchive>(ID_Archive);
+                var arc = pipe.Container.Get<ZipArchive>();
                 arc.Dispose();
 
-                pipe.Result = pipe.GetFlag<string>(ID_OutputFile);
+                pipe.Result = pipe.Container.Get<string>();
                 return problem;
             });
         }
@@ -66,7 +64,7 @@ namespace gop.Adapters.Generic
             return pipeline.Use((pipe, problem) =>
             {
                 Write(new OutputText("  Copy problem metadata...", true));
-                var arc = pipe.GetFlag<ZipArchive>(ID_Archive);
+                var arc = pipe.Container.Get<ZipArchive>();
                 arc.CreateEntryFromFile(problem.Profile, PF_ProblemConfig);
 
                 return problem;
@@ -78,7 +76,7 @@ namespace gop.Adapters.Generic
             return pipeline.Use((pipe, problem) =>
             {
                 Write(new OutputText("  Copy descriptions...", true));
-                var arc = pipe.GetFlag<ZipArchive>(ID_Archive);
+                var arc = pipe.Container.Get<ZipArchive>();
 
                 var descriptionEntry = arc.CreateEntry(PF_Description);
                 using (StreamWriter sw = new StreamWriter(descriptionEntry.Open(), UTF8WithoutBOM))
@@ -109,7 +107,7 @@ namespace gop.Adapters.Generic
             return pipeline.Use((pipe, problem) =>
             {
                 Write(new OutputText("  Copy descriptions...", true));
-                var arc = pipe.GetFlag<ZipArchive>(ID_Archive);
+                var arc = pipe.Container.Get<ZipArchive>();
 
                 var descriptionEntry = arc.CreateEntry(PF_Description);
                 using (StreamWriter sw = new StreamWriter(descriptionEntry.Open(), UTF8WithoutBOM))
@@ -140,7 +138,7 @@ namespace gop.Adapters.Generic
             return pipeline.Use((pipe, problem) =>
             {
                 Write(new OutputText("  Copy source codes...", true));
-                var arc = pipe.GetFlag<ZipArchive>(ID_Archive);
+                var arc = pipe.Container.Get<ZipArchive>();
                 arc.CreateEntryFromFile(problem.StandardProgram, PF_StandardProgram);
 
                 return problem;
@@ -152,7 +150,7 @@ namespace gop.Adapters.Generic
             return pipeline.Use((pipe, problem) =>
             {
                 Write(new OutputText("  Copy samples...", true));
-                var arc = pipe.GetFlag<ZipArchive>(ID_Archive);
+                var arc = pipe.Container.Get<ZipArchive>();
 
                 foreach (var u in problem.GetSamples())
                 {
@@ -175,7 +173,7 @@ namespace gop.Adapters.Generic
             return pipeline.Use((pipe, problem) =>
             {
                 Write(new OutputText("  Copy tests...", true));
-                var arc = pipe.GetFlag<ZipArchive>(ID_Archive);
+                var arc = pipe.Container.Get<ZipArchive>();
 
                 string tests = Path.Join(problem.Temp, PF_Tests);
                 if (File.Exists(tests)) File.Delete(tests);
@@ -204,7 +202,7 @@ namespace gop.Adapters.Generic
             return pipeline.Use((pipe, problem) =>
             {
                 Write(new OutputText("  Copy extra...", true));
-                var arc = pipe.GetFlag<ZipArchive>(ID_Archive);
+                var arc = pipe.Container.Get<ZipArchive>();
 
                 string data = Path.Join(problem.Temp, PF_Extra);
                 ZipFile.CreateFromDirectory(problem.Extra, data, CompressionLevel.Fastest, false, UTF8WithoutBOM);
@@ -219,7 +217,7 @@ namespace gop.Adapters.Generic
             return pipeline.Use((pipe, problem) =>
             {
                 ConsoleUI.Write(new OutputText("  Add logs...", true));
-                var arc = pipe.GetFlag<ZipArchive>(ID_Archive);
+                var arc = pipe.Container.Get<ZipArchive>();
 
                 var lintEntry = arc.CreateEntry(PF_Issues);
                 using (StreamWriter sw = new StreamWriter(lintEntry.Open(), UTF8WithoutBOM))
@@ -234,11 +232,11 @@ namespace gop.Adapters.Generic
             return pipeline.Use((pipe, problem) =>
             {
                 Write(new OutputText("  Add package metadata...", true));
-                var arc = pipe.GetFlag<ZipArchive>(ID_Archive);
+                var arc = pipe.Container.Get<ZipArchive>();
 
                 var packageEntry = arc.CreateEntry(PF_PackageConfig);
                 using (StreamWriter sw = new StreamWriter(packageEntry.Open(), UTF8WithoutBOM))
-                    sw.WriteLine(JsonConvert.SerializeObject(pipe.GetFlag<PackageProfile>(ID_Package), Formatting.Indented));
+                    sw.WriteLine(JsonConvert.SerializeObject(pipe.Container.Get<PackageProfile>(), Formatting.Indented));
 
                 return problem;
             });

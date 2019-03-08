@@ -3,6 +3,28 @@ using System.Collections.Generic;
 
 namespace gop.Adapters
 {
+    public class DependencyInjection
+    {
+        readonly Dictionary<Type, object> pools = new Dictionary<Type, object>();
+
+        public void Set<T>(T item)
+        {
+            pools.Add(typeof(T), item);
+        }
+
+        public void Replace<T>(T item)
+        {
+            var type = typeof(T);
+            if (pools.ContainsKey(type)) pools[type] = item;
+            else Set(item);
+        }
+
+        public T Get<T>()
+        {
+            return (T)pools[typeof(T)];
+        }
+    }
+
     public class PipelineResult<T>
     {
         public bool IsOk()
@@ -29,19 +51,7 @@ namespace gop.Adapters
     {
         string _token = null;
 
-        Dictionary<string, object> flags = new Dictionary<string, object>();
-
-        public T GetFlag<T>(string id)
-        {
-            return (T)flags[id];
-        }
-
-        public void SetFlag<T>(string id, T value)
-        {
-            if (flags.ContainsKey(id))
-                flags[id] = value;
-            else flags.Add(id, value);
-        }
+        public DependencyInjection Container { get; private set; } = new DependencyInjection();
 
         public void SetToken(string token)
         {
