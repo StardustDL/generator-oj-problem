@@ -19,7 +19,7 @@ You can also add it to the environment variable `PATH`.
 2. Unzip the package
 3. The tool is in the unzipped directory, named `gop`.
 
-### Global
+### Global **(Deprecated)**
 
 This methods install the tool into your system, and you can use the tool anywhere.
 

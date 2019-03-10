@@ -181,11 +181,11 @@ namespace gop.Adapters.Generic
                 {
                     foreach (var u in problem.GetTests())
                     {
-                        var inEntry = testarc.CreateEntry(Path.Join(PD_Samples, ProblemPath.GetTestInput(u.Name)));
+                        var inEntry = testarc.CreateEntry(ProblemPath.GetTestInput(u.Name));
                         using (StreamWriter sw = new StreamWriter(inEntry.Open(), UTF8WithoutBOM))
                         using (StreamReader sr = File.OpenText(u.InputFile))
                             ConvertToLF(sr, sw);
-                        var outEntry = testarc.CreateEntry(Path.Join(PD_Samples, ProblemPath.GetTestOutput(u.Name)));
+                        var outEntry = testarc.CreateEntry(ProblemPath.GetTestOutput(u.Name));
                         using (StreamWriter sw = new StreamWriter(outEntry.Open(), UTF8WithoutBOM))
                         using (StreamReader sr = File.OpenText(u.OutputFile))
                             ConvertToLF(sr, sw);

@@ -100,7 +100,7 @@ namespace gop.Judgers
             }
             catch (Exception ex)
             {
-                res.Issues.Add(new Issue(IssueLevel.Error, $"System error for {name} with {ex.Message}."));
+                res.Issues.Add(new Issue(IssueLevel.Error, $"System error for {name} with {ex.ToString()}."));
                 res.State = JudgeState.SystemError;
             }
             return res;

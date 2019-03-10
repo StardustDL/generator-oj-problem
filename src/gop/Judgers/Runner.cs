@@ -126,10 +126,10 @@ namespace gop.Judgers
         {
             try
             {
-                EndTime = DateTimeOffset.Now;
                 ExitCode = Process.ExitCode;
                 if (bwMemory?.IsBusy == true) bwMemory.CancelAsync();
                 Process.WaitForExit();
+                EndTime = DateTimeOffset.Now;
 
                 var output = new List<string>();
                 while (!Process.StandardOutput.EndOfStream)

@@ -3,7 +3,7 @@
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <TargetFramework>netcoreapp2.2</TargetFramework>
-    <PackAsTool>true</PackAsTool>
+    <!--<PackAsTool>true</PackAsTool>-->
     <PackageId>generator-oj-problem</PackageId>
     <Version>0.1.0-alpha</Version>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
