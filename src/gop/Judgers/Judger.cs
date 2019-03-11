@@ -72,9 +72,9 @@ namespace gop.Judgers
                                 else
                                 {
                                     if (timelimit.TotalSeconds / runner.RunningTime.TotalSeconds < 2)
-                                        res.Issues.Add(new Issue(IssueLevel.Warning, $"The time limit is too thin for {name}. It used {runner.RunningTime.TotalSeconds} seconds"));
+                                        res.Issues.Add(new Issue(IssueLevel.Warning, $"The time limit is too small for {name}. It used {runner.RunningTime.TotalSeconds} seconds"));
                                     if ((double)memoryLimit / runner.MaximumMemory < 2)
-                                        res.Issues.Add(new Issue(IssueLevel.Warning, $"The memory limit is too thin for {name}. It used {runner.MaximumMemory} bytes"));
+                                        res.Issues.Add(new Issue(IssueLevel.Warning, $"The memory limit is too small for {name}. It used {runner.MaximumMemory} bytes"));
                                     res.State = JudgeState.Accept;
                                 }
                                 break;

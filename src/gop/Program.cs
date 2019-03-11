@@ -143,7 +143,7 @@ namespace gop
                             }
                         }
                     }
-                    ConsoleUI.WriteSuccess(new OutputText("Generating succeeded.", true));
+                    ConsoleUI.WriteSuccess(new OutputText("Generating ended.", true));
                 }
                 catch (Exception ex)
                 {
@@ -154,7 +154,9 @@ namespace gop
 
         static ProblemPath Load()
         {
-            return new ProblemPath(Directory.GetCurrentDirectory());
+            string curDir = Directory.GetCurrentDirectory();
+            while (!String.IsNullOrEmpty(curDir) && !File.Exists(Path.Join(curDir, ProblemPath.F_Profile))) curDir = Path.GetDirectoryName(curDir);
+            return new ProblemPath(curDir);
         }
 
         static void Init()

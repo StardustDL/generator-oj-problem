@@ -35,7 +35,7 @@ namespace gop.Judgers
 
         public long MaximumMemory => Math.Max(MaximumPagedMemorySize64, MaximumPeakPagedMemorySize64);
 
-        public TimeSpan RunningTime => StartTime - EndTime;
+        public TimeSpan RunningTime => EndTime - StartTime;
 
         public DateTimeOffset StartTime { get; private set; }
 
