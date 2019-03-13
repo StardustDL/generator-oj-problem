@@ -23,6 +23,20 @@ namespace gop.Adapters
         {
             return (T)pools[typeof(T)];
         }
+
+        public bool TryGet<T>(out T value)
+        {
+            if(pools.TryGetValue(typeof(T), out var _value))
+            {
+                value = (T)_value;
+                return true;
+            }
+            else
+            {
+                value = default;
+                return false;
+            }
+        }
     }
 
     public class PipelineResult<T>

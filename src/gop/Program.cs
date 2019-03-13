@@ -366,9 +366,12 @@ namespace gop
             }
         }
 
-        static List<Issue> Check(bool withLocalJudge = true)
+        static List<Issue> Check(bool withLocalJudge = true, Logger logger = null)
         {
             var pipeline = new Pipeline<ProblemPath, List<Issue>>(Load());
+
+            if (logger != null)
+                pipeline = Adapters.Generic.Checker.UseLogger(pipeline, logger);
 
             pipeline = Adapters.HustOJ.Checker.UseDefault(pipeline);
             if (withLocalJudge)
@@ -387,7 +390,9 @@ namespace gop
         {
             ConsoleUI.WriteInfo(new OutputText("Checking before pack...", true));
 
-            var issues = Check(withLocalJudge).ToList();
+            Logger logger = new Logger();
+
+            var issues = Check(withLocalJudge, logger).ToList();
 
             if (check)
             {
@@ -401,6 +406,7 @@ namespace gop
 
             var problem = Load();
             var pipeline = new Pipeline<ProblemPath, string>(problem);
+            pipeline = Adapters.Generic.Packer.UseLogger(pipeline, logger);
 
             PackageProfile profile = PackageProfile.Create();
             {

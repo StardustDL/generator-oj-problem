@@ -15,6 +15,8 @@ namespace gop.Adapters.Generic
 {
     public static class Checker
     {
+        public const string LogCategory = "Checker";
+
         static bool IsPass(IEnumerable<Issue> issues, bool show = true, string indent = "")
         {
             bool flag = !issues.Any(x => x.Level == IssueLevel.Error);
@@ -26,17 +28,31 @@ namespace gop.Adapters.Generic
             return flag;
         }
 
+        public static PPipeline UseLogger(this PPipeline pipeline, Logger logger)
+        {
+            return pipeline.Use((pipe, problem) =>
+            {
+                pipe.Container.Set(logger);
+                return problem;
+            });
+        }
+
         public static PPipeline UseProfile(this PPipeline pipeline)
         {
+            const string LogCategory = Checker.LogCategory + ".Profile";
             return pipeline.Use((pipe, problem) =>
             {
                 WriteInfo(new OutputText("Checking ", false));
                 Write(new OutputText("config...", false));
                 var ciss = new List<Issue>();
                 ProblemProfile config = null;
+                pipe.Container.TryGet<Logger>(out var logger);
+                logger?.Info("Starting", LogCategory);
+
                 if (!File.Exists(problem.Profile))
                 {
                     var issue = new Issue(IssueLevel.Error, "The problem profile is not found.");
+                    logger?.Issue(issue, LogCategory);
                     ciss.Add(issue);
                 }
                 else
@@ -45,9 +61,10 @@ namespace gop.Adapters.Generic
                     {
                         config = problem.GetProfile();
                     }
-                    catch
+                    catch (Exception ex)
                     {
                         var issue = new Issue(IssueLevel.Error, "The problem profile format is incorrect.");
+                        logger?.Error(issue.Content + ex.ToString(), LogCategory);
                         ciss.Add(issue);
                     }
                 }
@@ -62,16 +79,23 @@ namespace gop.Adapters.Generic
 
                 pipe.Container.Set(config);
 
+                logger?.Info("Ended", LogCategory);
+
                 return problem;
             });
         }
 
         public static PPipeline UseDescriptions(this PPipeline pipeline)
         {
+            const string LogCategory = Checker.LogCategory + ".Descriptions";
             return pipeline.Use((pipe, problem) =>
             {
                 WriteInfo(new OutputText("Checking ", false));
                 Write(new OutputText("description...", false));
+
+                pipe.Container.TryGet<Logger>(out var logger);
+                logger?.Info("Starting", LogCategory);
+
                 var ciss = new List<Issue>(Linter.Descriptions(problem));
 
                 pipe.Result.AddRange(ciss);
@@ -79,16 +103,23 @@ namespace gop.Adapters.Generic
                 if (!IsPass(ciss, indent: "  "))
                     throw new Exception("Description checking failed.");
 
+                logger?.Info("Ended", LogCategory);
+
                 return problem;
             });
         }
 
         public static PPipeline UseSamples(this PPipeline pipeline)
         {
+            const string LogCategory = Checker.LogCategory + ".Samples";
             return pipeline.Use((pipe, problem) =>
             {
                 WriteInfo(new OutputText("Checking ", false));
                 Write(new OutputText("samples...", true));
+
+                pipe.Container.TryGet<Logger>(out var logger);
+                logger?.Info("Starting", LogCategory);
+
                 var ciss = new List<Issue>();
 
                 var data = problem.GetSamples().ToArray();
@@ -98,6 +129,7 @@ namespace gop.Adapters.Generic
                     case 0:
                         {
                             var iss = new Issue(IssueLevel.Error, "Sample data is missing.");
+                            logger?.Issue(iss, LogCategory);
                             ciss.Add(iss);
                             ShowIssue(iss, "  ");
                             break;
@@ -107,6 +139,7 @@ namespace gop.Adapters.Generic
                     default:
                         {
                             var iss = new Issue(IssueLevel.Warning, "There are more than one sample of data, and only the first one will be used.");
+                            logger?.Issue(iss, LogCategory);
                             ciss.Add(iss);
                             ShowIssue(iss, "  ");
                             break;
@@ -120,7 +153,9 @@ namespace gop.Adapters.Generic
                     WriteInfo(new OutputText((i + 1).ToString(), false));
                     Write(new OutputText($"/{data.Length}]", false));
                     Write(new OutputText($" Sample {t.Name}: ", false));
-                    var iss = Linter.TestCase(t);
+                    logger?.Info($"Sample {t.Name}", LogCategory);
+                    var iss = Linter.TestCase(t).ToList();
+                    iss.ForEach(x => logger?.Issue(x, LogCategory));
                     ciss.AddRange(iss);
                     IsPass(iss, indent: "    ");
                 }
@@ -132,16 +167,23 @@ namespace gop.Adapters.Generic
                 if (!IsPass(ciss, false))
                     throw new Exception("Samples checking failed.");
 
+                logger?.Info("Ended", LogCategory);
+
                 return problem;
             });
         }
 
         public static PPipeline UseTests(this PPipeline pipeline)
         {
+            const string LogCategory = Checker.LogCategory + ".Tests";
             return pipeline.Use((pipe, problem) =>
             {
                 WriteInfo(new OutputText("Checking ", false));
                 Write(new OutputText("tests...", true));
+
+                pipe.Container.TryGet<Logger>(out var logger);
+                logger?.Info("Starting", LogCategory);
+
                 var ciss = new List<Issue>();
 
                 var data = problem.GetTests().ToArray();
@@ -151,6 +193,7 @@ namespace gop.Adapters.Generic
                     case 0:
                         {
                             var iss = new Issue(IssueLevel.Error, "The test data is missing.");
+                            logger?.Issue(iss, LogCategory);
                             ciss.Add(iss);
                             ShowIssue(iss, "  ");
                             break;
@@ -164,7 +207,9 @@ namespace gop.Adapters.Generic
                     WriteInfo(new OutputText((i + 1).ToString(), false));
                     Write(new OutputText($"/{data.Length}]", false));
                     Write(new OutputText($" Test {t.Name}: ", false));
-                    var iss = Linter.TestCase(t);
+                    logger?.Info($"Test {t.Name}", LogCategory);
+                    var iss = Linter.TestCase(t).ToList();
+                    iss.ForEach(v => logger.Issue(v, LogCategory));
                     ciss.AddRange(iss);
                     IsPass(iss, indent: "    ");
                 }
@@ -176,12 +221,15 @@ namespace gop.Adapters.Generic
                 if (!IsPass(ciss, false))
                     throw new Exception("Tests checking failed.");
 
+                logger?.Info("Ended", LogCategory);
+
                 return problem;
             });
         }
 
         public static PPipeline UseLocalJudger(this PPipeline pipeline)
         {
+            const string LogCategory = Checker.LogCategory + ".LocalJudger";
             void ShowState(JudgeState state)
             {
                 switch (state)
@@ -213,6 +261,10 @@ namespace gop.Adapters.Generic
             {
                 WriteInfo(new OutputText("Checking ", false));
                 Write(new OutputText("all data by local judger...", true));
+
+                pipe.Container.TryGet<Logger>(out var logger);
+                logger?.Info("Starting", LogCategory);
+
                 var profile = pipe.Container.Get<ProblemProfile>();
 
                 var ciss = new List<Issue>();
@@ -222,6 +274,8 @@ namespace gop.Adapters.Generic
                     Write(new OutputText($"  Sample {t.Name}...", false));
                     var result = Judger.Judge($"sample {t.Name}", profile.StdRun, TimeSpan.FromSeconds(profile.TimeLimit), profile.MemoryLimit * 1024 * 1024, ReadAll(t.InputFile), File.ReadAllLines(t.OutputFile, Encoding.UTF8));
                     ShowState(result.State);
+                    logger?.Info($"Sample {t.Name}: {result.State}", LogCategory);
+                    result.Issues.ForEach(i => logger.Issue(i, LogCategory));
                     ciss.AddRange(result.Issues);
                 }
 
@@ -230,6 +284,8 @@ namespace gop.Adapters.Generic
                     Write(new OutputText($"  Test {t.Name}...", false));
                     var result = Judger.Judge($"test {t.Name}", profile.StdRun, TimeSpan.FromSeconds(profile.TimeLimit), profile.MemoryLimit * 1024 * 1024, ReadAll(t.InputFile), File.ReadAllLines(t.OutputFile, Encoding.UTF8));
                     ShowState(result.State);
+                    logger?.Info($"Test {t.Name}: {result.State}", LogCategory);
+                    result.Issues.ForEach(i => logger.Issue(i, LogCategory));
                     ciss.AddRange(result.Issues);
                 }
 
@@ -239,6 +295,8 @@ namespace gop.Adapters.Generic
 
                 if (!IsPass(ciss, indent: "    "))
                     throw new Exception("Local judging checking failed.");
+
+                logger?.Info("Ended", LogCategory);
 
                 return problem;
             });

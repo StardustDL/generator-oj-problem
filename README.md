@@ -72,6 +72,8 @@ $ gop init
     - This enables local judger for `check` and `gen` commands you will use later.
 4. Add all inputs for samples and tests, and finish step 3, then you can use this command to auto-generate outputs:
 ```sh
+# If you change standard program, recompile it and then re-gen.
+# gen command won't auto-compile for you.
 $ gop gen
 ```
 5. After you finish things above, use this command to check whether your directory is available to pack:
@@ -99,6 +101,8 @@ $ gop pack --disable-local-judger
 # (not recommended, and the package won't be accepted when submit)
 $ gop pack --force
 ```
+
+Here is a problem [example](./samples/APlusB/). Compile `src/std.cpp` before you check it.
 
 Addition:
 - If you have addition files (such as images), add to `/extra/` directory, and all files in this directory will be packed.
