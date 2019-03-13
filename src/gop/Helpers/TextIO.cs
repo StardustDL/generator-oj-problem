@@ -25,6 +25,14 @@ namespace gop.Helpers
                 writer.Write(reader.ReadLine() + "\n");
         }
 
+        public static string ConvertToLF(StreamReader reader)
+        {
+            StringBuilder sb = new StringBuilder();
+            while (!reader.EndOfStream)
+                sb.Append(reader.ReadLine() + "\n");
+            return sb.ToString();
+        }
+
         public static List<string> Diff(List<string> expected, List<string> real)
         {
             while (expected.Count > 0 && string.IsNullOrEmpty(expected.Last())) expected.RemoveAt(expected.Count - 1);
