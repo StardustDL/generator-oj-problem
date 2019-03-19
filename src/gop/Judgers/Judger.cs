@@ -13,8 +13,8 @@ namespace gop.Judgers
         Judging,
         Accept,
         WrongAnswer,
-        TimeLimitError,
-        MemoryLimitError,
+        TimeLimitExceeded,
+        MemoryLimitExceeded,
         RuntimeError,
         SystemError,
     }
@@ -82,15 +82,15 @@ namespace gop.Judgers
                         case RunnerState.OutOfMemory:
                             {
                                 var message = $"Used {runner.MaximumMemory} bytes, limit {memoryLimit} bytes.";
-                                res.Issues.Add(new Issue(IssueLevel.Error, $"Memory limit error for {name}. {message}"));
-                                res.State = JudgeState.MemoryLimitError;
+                                res.Issues.Add(new Issue(IssueLevel.Error, $"Memory limit exceeded for {name}. {message}"));
+                                res.State = JudgeState.MemoryLimitExceeded;
                                 break;
                             }
                         case RunnerState.OutOfTime:
                             {
                                 var message = $"Used {runner.RunningTime.TotalSeconds} seconds, limit {timelimit.TotalSeconds} seconds.";
-                                res.Issues.Add(new Issue(IssueLevel.Error, $"Time limit error for {name}. {message}"));
-                                res.State = JudgeState.TimeLimitError;
+                                res.Issues.Add(new Issue(IssueLevel.Error, $"Time limit exceeded for {name}. {message}"));
+                                res.State = JudgeState.TimeLimitExceeded;
                                 break;
                             }
                         default:

@@ -90,22 +90,23 @@ $ gop preview
 # preview by HTML
 $ gop preview --html
 ```
-7. After you fix up all **errors** and **warnings**, use this command to pack your problem and then you can submit the package:
+7. After you fix up all **errors** and **warnings**, use this command to pack your problem and then you can submit the package(Always use `--platform` option with `fps`):
 ```sh
-$ gop pack
+$ gop pack --platform fps
 
 # disable local judger when check (not recommended)
-$ gop pack --disable-local-judger
+$ gop pack --disable-local-judger --platform fps
 
 # force pack although checking failed
 # (not recommended, and the package won't be accepted when submit)
-$ gop pack --force
+$ gop pack --force --platform fps
 ```
 
 Here is a problem [example](./samples/APlusB/). Compile `src/std.cpp` before you check it.
 
 Addition:
 - If you have addition files (such as images), add to `/extra/` directory, and all files in this directory will be packed.
+  - In this case, use `--platform hustoj` instead of `--platform fps`.
 - Use `--help` to see more information about this tool.
 
 Have fun!
@@ -155,6 +156,7 @@ Check whether the problem is available to pack.
 |Option|Description|
 |-|-|
 |`--disable-local-judger`|Disable local judging for check.|
+|`-p, --platform`|The target platform: `generic`, `hustoj`, `fps`|
 
 ```sh
 $ gop check
@@ -168,7 +170,7 @@ Pack the problem into one package to submit.
 |-|-|
 |`--force`|Pack although checking failing.|
 |`--disable-local-judger`|Disable local judging for check.|
-|`-p, --platform`|The target platform.|
+|`-p, --platform`|The target platform: `generic`, `hustoj`, `fps`|
 
 ```sh
 $ gop pack

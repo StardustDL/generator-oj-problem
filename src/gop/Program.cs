@@ -18,7 +18,9 @@ namespace gop
 {
     enum OnlineJudge
     {
+        Generic,
         HustOJ,
+        FPS,
     }
 
     class Program
@@ -36,11 +38,15 @@ namespace gop
                 Handler = CommandHandler.Create(() => { Init(); })
             };
 
+            var disableLJOption = new Option("--disable-local-judger", "Disable local judging for check.", new Argument<bool>(false));
+            var platformOption = new Option(new string[] { "--platform", "-p" }, "The target platform: generic, hustoj, fps.", new Argument<OnlineJudge>());
+
             var checkCommand = new Command("check", "Check whether the problem is available to pack.");
-            checkCommand.AddOption(new Option("--disable-local-judger", "Disable local judging for check.", new Argument<bool>(false)));
-            checkCommand.Handler = CommandHandler.Create((bool disableLocalJudger) =>
+            checkCommand.AddOption(disableLJOption);
+            checkCommand.AddOption(platformOption);
+            checkCommand.Handler = CommandHandler.Create((bool disableLocalJudger, OnlineJudge platform) =>
             {
-                if (Check(!disableLocalJudger).Any(x => x.Level == IssueLevel.Error))
+                if (Check(platform, !disableLocalJudger).Any(x => x.Level == IssueLevel.Error))
                 {
                     ConsoleUI.WriteError(new OutputText("Problem checking failed.", true));
                 }
@@ -52,8 +58,8 @@ namespace gop
 
             var packCommand = new Command("pack", "Pack the problem into one package to submit.");
             packCommand.AddOption(new Option("--force", "Pack although checking failing.", new Argument<bool>(false)));
-            packCommand.AddOption(new Option("--disable-local-judger", "Disable local judging for check.", new Argument<bool>(false)));
-            packCommand.AddOption(new Option(new string[] { "--platform", "-p" }, "The target platform.", new Argument<OnlineJudge>()));
+            packCommand.AddOption(disableLJOption);
+            packCommand.AddOption(platformOption);
             packCommand.Handler = CommandHandler.Create((bool force, bool disableLocalJudger, OnlineJudge platform) => { Pack(platform, !force, !disableLocalJudger); });
 
             var previewCommand = new Command("preview", "Preview the problem.");
@@ -89,11 +95,11 @@ namespace gop
                         case JudgeState.WrongAnswer:
                             ConsoleUI.WriteSuccess(new OutputText("Success", true));
                             return true;
-                        case JudgeState.MemoryLimitError:
-                            ConsoleUI.WriteError(new OutputText("Memory Limit Error", true));
+                        case JudgeState.MemoryLimitExceeded:
+                            ConsoleUI.WriteError(new OutputText("Memory Limit Exceeded", true));
                             return false;
-                        case JudgeState.TimeLimitError:
-                            ConsoleUI.WriteError(new OutputText("Time Limit Error", true));
+                        case JudgeState.TimeLimitExceeded:
+                            ConsoleUI.WriteError(new OutputText("Time Limit Exceeded", true));
                             return false;
                         case JudgeState.RuntimeError:
                             ConsoleUI.WriteError(new OutputText("Runtime Error", true));
@@ -366,14 +372,29 @@ namespace gop
             }
         }
 
-        static List<Issue> Check(bool withLocalJudge = true, Logger logger = null)
+        static List<Issue> Check(OnlineJudge platform, bool withLocalJudge = true, Logger logger = null)
         {
             var pipeline = new Pipeline<ProblemPath, List<Issue>>(Load());
 
             if (logger != null)
                 pipeline = Adapters.Generic.Checker.UseLogger(pipeline, logger);
 
-            pipeline = Adapters.HustOJ.Checker.UseDefault(pipeline);
+            switch (platform)
+            {
+                case OnlineJudge.Generic:
+                    pipeline = Adapters.Generic.Checker.UseDefault(pipeline);
+                    break;
+                case OnlineJudge.HustOJ:
+                    pipeline = Adapters.HustOJ.Checker.UseDefault(pipeline);
+                    break;
+                case OnlineJudge.FPS:
+                    pipeline = Adapters.FreeProblemSet.Checker.UseDefault(pipeline);
+                    break;
+                default:
+                    ConsoleUI.WriteError(new OutputText("Unsupported platform.", true));
+                    return new List<Issue> { new Issue(IssueLevel.Error, $"Unsupported platform.") };
+            }
+
             if (withLocalJudge)
                 pipeline = Adapters.Generic.Checker.UseLocalJudger(pipeline);
 
@@ -392,7 +413,7 @@ namespace gop
 
             Logger logger = new Logger();
 
-            var issues = Check(withLocalJudge, logger).ToList();
+            var issues = Check(platform, withLocalJudge, logger).ToList();
 
             if (check)
             {
@@ -418,23 +439,31 @@ namespace gop
 
             switch (platform)
             {
+                case OnlineJudge.Generic:
+                    pipeline = Adapters.Generic.Packer.UseDefaultMarkdown(pipeline, profile);
+                    if (Directory.GetFileSystemEntries(problem.Extra).Length > 0)
+                        pipeline = Adapters.Generic.Packer.UseExtra(pipeline);
+                    pipeline = Adapters.Generic.Packer.UseIssues(pipeline, issues);
+                    pipeline = Adapters.Generic.Packer.UsePackage(pipeline);
+                    pipeline = Adapters.Generic.Packer.UseSave(pipeline);
+                    break;
                 case OnlineJudge.HustOJ:
-                    profile.Platform = "hustoj";
                     pipeline = Adapters.HustOJ.Packer.UseDefault(pipeline, profile);
-
+                    if (Directory.GetFileSystemEntries(problem.Extra).Length > 0)
+                        pipeline = Adapters.Generic.Packer.UseExtra(pipeline);
+                    pipeline = Adapters.Generic.Packer.UseIssues(pipeline, issues);
+                    pipeline = Adapters.Generic.Packer.UsePackage(pipeline);
+                    pipeline = Adapters.Generic.Packer.UseSave(pipeline);
+                    break;
+                case OnlineJudge.FPS:
+                    pipeline = Adapters.FreeProblemSet.Packer.UseDefault(pipeline, profile);
+                    pipeline = Adapters.FreeProblemSet.Packer.UseSave(pipeline);
                     break;
                 default:
                     ConsoleUI.WriteError(new OutputText("Unsupported platform.", true));
                     return;
             }
-
-            if (Directory.GetFileSystemEntries(problem.Extra).Length > 0)
-                pipeline = Adapters.Generic.Packer.UseExtra(pipeline);
-
-            pipeline = Adapters.Generic.Packer.UseIssues(pipeline, issues);
-            pipeline = Adapters.Generic.Packer.UsePackage(pipeline);
-            pipeline = Adapters.Generic.Packer.UseSave(pipeline);
-
+            
             var result = pipeline.Consume();
             if (result.IsOk())
             {

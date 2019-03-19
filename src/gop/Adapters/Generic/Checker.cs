@@ -15,6 +15,20 @@ namespace gop.Adapters.Generic
 {
     public static class Checker
     {
+        const string Token = "Generic.Checker";
+
+        public static PPipeline UseInitial(this PPipeline pipeline)
+        {
+            pipeline.SetToken(Token);
+            pipeline.Result = new List<Issue>();
+            return pipeline;
+        }
+
+        public static PPipeline UseDefault(this PPipeline pipeline)
+        {
+            return pipeline.UseInitial().UseProfile().UseDescriptions().UseSamples().UseTests();
+        }
+
         public const string LogCategory = "Checker";
 
         static bool IsPass(IEnumerable<Issue> issues, bool show = true, string indent = "")
@@ -237,11 +251,11 @@ namespace gop.Adapters.Generic
                     case JudgeState.Accept:
                         WriteSuccess(new OutputText("Accept", true));
                         break;
-                    case JudgeState.MemoryLimitError:
-                        WriteError(new OutputText("Memory Limit Error", true));
+                    case JudgeState.MemoryLimitExceeded:
+                        WriteError(new OutputText("Memory Limit Exceeded", true));
                         break;
-                    case JudgeState.TimeLimitError:
-                        WriteError(new OutputText("Time Limit Error", true));
+                    case JudgeState.TimeLimitExceeded:
+                        WriteError(new OutputText("Time Limit Exceeded", true));
                         break;
                     case JudgeState.RuntimeError:
                         WriteError(new OutputText("Runtime Error", true));

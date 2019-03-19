@@ -13,6 +13,7 @@ namespace gop.Adapters.Generic
 {
     public static class Packer
     {
+        const string Token = "Generic.Packer";
         public const string LogCategory = "Packer";
 
         #region Paths
@@ -22,6 +23,24 @@ namespace gop.Adapters.Generic
         public static readonly string PF_StandardProgram = Path.Join(PD_SourceCode, "std.cpp"), PF_Issues = Path.Join(PD_Log, "issues.json"), PF_Description = Path.Join(PD_Descriptions, "description.txt"), PF_Hint = Path.Join(PD_Descriptions, "hint.txt"), PF_Input = Path.Join(PD_Descriptions, "input.txt"), PF_Output = Path.Join(PD_Descriptions, "output.txt"), PF_Source = Path.Join(PD_Descriptions, "source.txt"), PF_Log = Path.Join(PD_Log, "log.json");
 
         #endregion
+
+        public static PPipeline UseInitial(this PPipeline pipeline, PackageProfile package)
+        {
+            pipeline.SetToken(Token);
+            pipeline.Result = null;
+            package.Platform = "generic";
+            return pipeline.UseCreate(package);
+        }
+
+        public static PPipeline UseDefaultMarkdown(this PPipeline pipeline, PackageProfile package)
+        {
+            return pipeline.UseInitial(package).UseMetadata().UseDescriptionsMarkdown().UseSamples().UseSourceCode().UseTests();
+        }
+
+        public static PPipeline UseDefaultPlainText(this PPipeline pipeline, PackageProfile package)
+        {
+            return pipeline.UseInitial(package).UseMetadata().UseDescriptionsPlainText().UseSamples().UseSourceCode().UseTests();
+        }
 
         public static PPipeline UseCreate(this PPipeline pipeline, PackageProfile package)
         {
