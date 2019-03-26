@@ -37,7 +37,7 @@ namespace gop.Adapters.HustOJ
             return pipeline.Use((pipe, problem) =>
             {
                 Write(new OutputText("  Create FPS data...", true));
-                pipe.Container.TryGet<Logger>(out var logger);
+                var logger = pipe.Logger;
                 logger?.Info("Starting", LogCategory);
 
                 var arc = pipe.Container.Get<ZipArchive>();

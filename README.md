@@ -57,7 +57,7 @@ $ gop init
    1. `profile.json` Config information
    2. `descriptions/` All text for description. 
       1. The file with extension `.md` means it supports plain [CommonMark](https://commonmark.org/) by built-in render. 
-         - **Attention**: No LaTeX supports.
+         - **Attention**: No LaTeX and embeded image supports.
       2. `descriptions/description.md` Description
       3. `descriptions/input.md` Description of input
       4. `descriptions/output.md` Description of output
@@ -102,9 +102,10 @@ $ gop pack --disable-local-judger --platform fps
 $ gop pack --force --platform fps
 ```
 
+**Example**:
 Here is a problem [example](./samples/APlusB/). Compile `src/std.cpp` before you check it.
 
-Addition:
+**Addition**:
 - If you have addition files (such as images), add to `/extra/` directory, and all files in this directory will be packed.
   - In this case, use `--platform hustoj` instead of `--platform fps`.
 - Use `--help` to see more information about this tool.

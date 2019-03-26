@@ -129,21 +129,32 @@ namespace gop.Judgers
                 ExitCode = Process.ExitCode;
                 if (bwMemory?.IsBusy == true) bwMemory.CancelAsync();
                 Process.WaitForExit();
-                EndTime = DateTimeOffset.Now;
-
-                var output = new List<string>();
-                while (!Process.StandardOutput.EndOfStream)
-                    output.Add(Process.StandardOutput.ReadLine());
-                Output = output.ToArray();
-                var error = new List<string>();
-                while (!Process.StandardError.EndOfStream)
-                    error.Add(Process.StandardError.ReadLine());
-                Error = error.ToArray();
             }
             catch
             {
 
             }
+
+            EndTime = DateTimeOffset.Now;
+
+            var output = new List<string>();
+
+            try
+            {
+                while (!Process.StandardOutput.EndOfStream)
+                    output.Add(Process.StandardOutput.ReadLine());
+            }
+            catch { }
+            Output = output.ToArray();
+
+            var error = new List<string>();
+            try
+            {
+                while (!Process.StandardError.EndOfStream)
+                    error.Add(Process.StandardError.ReadLine());
+            }
+            catch { }
+            Error = error.ToArray();
         }
 
 

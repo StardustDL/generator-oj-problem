@@ -134,7 +134,7 @@ namespace gop.Adapters.FreeProblemSet
             return pipeline.Use((pipe, problem) =>
             {
                 WriteInfo(new OutputText("Packing the problem...", true));
-                pipe.Container.TryGet<Logger>(out var logger);
+                var logger = pipe.Logger;
                 logger?.Info("Starting", LogCategory);
                 var config = problem.GetProfile();
                 pipe.Container.Set(config);
@@ -163,7 +163,7 @@ namespace gop.Adapters.FreeProblemSet
             return pipeline.Use((pipe, problem) =>
             {
                 Write(new OutputText("  Create FPS data...", true));
-                pipe.Container.TryGet<Logger>(out var logger);
+                var logger = pipe.Logger;
                 logger?.Info("Starting", LogCategory);
 
                 var outputFile = pipe.Container.Get<string>();
@@ -187,7 +187,7 @@ namespace gop.Adapters.FreeProblemSet
             return pipeline.Use((pipe, problem) =>
             {
                 Write(new OutputText("  Saving...", true));
-                pipe.Container.TryGet<Logger>(out var logger);
+                var logger = pipe.Logger;
                 logger?.Info("Starting", LogCategory);
 
                 pipe.Result = pipe.Container.Get<string>();

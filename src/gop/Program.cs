@@ -115,6 +115,11 @@ namespace gop
                 try
                 {
                     var profile = problem.GetProfile();
+                    if (profile.StdRun == null || profile.StdRun.Length == 0)
+                    {
+                        ConsoleUI.Write(new OutputText("Please set profile.StdRun first.", true));
+                        return;
+                    }
 
                     foreach (var t in problem.GetSamples())
                     {
@@ -402,6 +407,7 @@ namespace gop
             if (result.IsOk()) return result.Result;
             else
             {
+                if (result.Logger != null) ConsoleUI.ShowLogger(result.Logger);
                 ConsoleUI.ShowException(result.Exception);
                 return new List<Issue> { new Issue(IssueLevel.Error, $"Internal error. {result.Exception.Message}") };
             }
@@ -463,7 +469,7 @@ namespace gop
                     ConsoleUI.WriteError(new OutputText("Unsupported platform.", true));
                     return;
             }
-            
+
             var result = pipeline.Consume();
             if (result.IsOk())
             {
@@ -472,6 +478,7 @@ namespace gop
             }
             else
             {
+                if (result.Logger != null) ConsoleUI.ShowLogger(result.Logger);
                 ConsoleUI.ShowException(result.Exception);
             }
         }

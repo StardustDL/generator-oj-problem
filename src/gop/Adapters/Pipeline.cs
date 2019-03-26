@@ -26,7 +26,7 @@ namespace gop.Adapters
 
         public bool TryGet<T>(out T value)
         {
-            if(pools.TryGetValue(typeof(T), out var _value))
+            if (pools.TryGetValue(typeof(T), out var _value))
             {
                 value = (T)_value;
                 return true;
@@ -54,10 +54,13 @@ namespace gop.Adapters
         public T Result { get; private set; }
         public Exception Exception { get; private set; }
 
-        public PipelineResult(T result, Exception ex)
+        public Logger Logger { get; private set; }
+
+        public PipelineResult(T result, Exception ex, Logger logger)
         {
             Exception = ex;
             Result = result;
+            Logger = logger;
         }
     }
 
@@ -83,6 +86,8 @@ namespace gop.Adapters
         public TResult Result { get; set; }
 
         public Exception Exception { get; set; }
+
+        public Logger Logger { get; set; }
 
         readonly List<Func<Pipeline<TOrigin, TResult>, TOrigin, TOrigin>> ops = new List<Func<Pipeline<TOrigin, TResult>, TOrigin, TOrigin>>();
 
@@ -128,7 +133,7 @@ namespace gop.Adapters
         public PipelineResult<TResult> Consume()
         {
             while (Step()) ;
-            return new PipelineResult<TResult>(Result, Exception);
+            return new PipelineResult<TResult>(Result, Exception, Logger);
         }
     }
 }

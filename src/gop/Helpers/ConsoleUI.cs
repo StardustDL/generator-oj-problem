@@ -28,6 +28,17 @@ namespace gop.Helpers
         {
             WriteError(new OutputText("Failed: ", false));
             Console.WriteLine($"An error has occurred: {ex.Message}");
+            Console.WriteLine("Details for debug:");
+            Console.WriteLine(ex.ToString());
+        }
+
+        public static void ShowLogger(Logger log)
+        {
+            WriteInfo(new OutputText("Logs:", true));
+            foreach (var v in log.All())
+            {
+                Console.WriteLine($"[{v.Category.ToString()}] {v.Category} {v.Time.ToString()} {v.Content}");
+            }
         }
 
         public static void ShowIssue(Issue issue, string indent = "")

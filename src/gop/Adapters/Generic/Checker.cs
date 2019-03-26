@@ -46,7 +46,7 @@ namespace gop.Adapters.Generic
         {
             return pipeline.Use((pipe, problem) =>
             {
-                pipe.Container.Set(logger);
+                pipe.Logger = logger;
                 return problem;
             });
         }
@@ -60,7 +60,7 @@ namespace gop.Adapters.Generic
                 Write(new OutputText("config...", false));
                 var ciss = new List<Issue>();
                 ProblemProfile config = null;
-                pipe.Container.TryGet<Logger>(out var logger);
+                var logger = pipe.Logger;
                 logger?.Info("Starting", LogCategory);
 
                 if (!File.Exists(problem.Profile))
@@ -107,7 +107,7 @@ namespace gop.Adapters.Generic
                 WriteInfo(new OutputText("Checking ", false));
                 Write(new OutputText("description...", false));
 
-                pipe.Container.TryGet<Logger>(out var logger);
+                var logger = pipe.Logger;
                 logger?.Info("Starting", LogCategory);
 
                 var ciss = new List<Issue>(Linter.Descriptions(problem));
@@ -131,7 +131,7 @@ namespace gop.Adapters.Generic
                 WriteInfo(new OutputText("Checking ", false));
                 Write(new OutputText("samples...", true));
 
-                pipe.Container.TryGet<Logger>(out var logger);
+                var logger = pipe.Logger;
                 logger?.Info("Starting", LogCategory);
 
                 var ciss = new List<Issue>();
@@ -152,7 +152,7 @@ namespace gop.Adapters.Generic
                         break;
                     default:
                         {
-                            var iss = new Issue(IssueLevel.Warning, "There are more than one sample of data, and only the first one will be used.");
+                            var iss = new Issue(IssueLevel.Error, "There are more than one sample of data, and only the first one will be used.");
                             logger?.Issue(iss, LogCategory);
                             ciss.Add(iss);
                             ShowIssue(iss, "  ");
@@ -195,7 +195,7 @@ namespace gop.Adapters.Generic
                 WriteInfo(new OutputText("Checking ", false));
                 Write(new OutputText("tests...", true));
 
-                pipe.Container.TryGet<Logger>(out var logger);
+                var logger = pipe.Logger;
                 logger?.Info("Starting", LogCategory);
 
                 var ciss = new List<Issue>();
@@ -276,7 +276,7 @@ namespace gop.Adapters.Generic
                 WriteInfo(new OutputText("Checking ", false));
                 Write(new OutputText("all data by local judger...", true));
 
-                pipe.Container.TryGet<Logger>(out var logger);
+                var logger = pipe.Logger;
                 logger?.Info("Starting", LogCategory);
 
                 var profile = pipe.Container.Get<ProblemProfile>();
@@ -289,7 +289,7 @@ namespace gop.Adapters.Generic
                     var result = Judger.Judge($"sample {t.Name}", profile.StdRun, TimeSpan.FromSeconds(profile.TimeLimit), profile.MemoryLimit * 1024 * 1024, ReadAll(t.InputFile), File.ReadAllLines(t.OutputFile, Encoding.UTF8));
                     ShowState(result.State);
                     logger?.Info($"Sample {t.Name}: {result.State}", LogCategory);
-                    result.Issues.ForEach(i => logger.Issue(i, LogCategory));
+                    result.Issues.ForEach(i => logger?.Issue(i, LogCategory));
                     ciss.AddRange(result.Issues);
                 }
 
@@ -299,7 +299,7 @@ namespace gop.Adapters.Generic
                     var result = Judger.Judge($"test {t.Name}", profile.StdRun, TimeSpan.FromSeconds(profile.TimeLimit), profile.MemoryLimit * 1024 * 1024, ReadAll(t.InputFile), File.ReadAllLines(t.OutputFile, Encoding.UTF8));
                     ShowState(result.State);
                     logger?.Info($"Test {t.Name}: {result.State}", LogCategory);
-                    result.Issues.ForEach(i => logger.Issue(i, LogCategory));
+                    result.Issues.ForEach(i => logger?.Issue(i, LogCategory));
                     ciss.AddRange(result.Issues);
                 }
 

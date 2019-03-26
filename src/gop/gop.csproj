@@ -17,6 +17,7 @@
     <RepositoryUrl>https://github.com/StardustDL/generator-oj-problem</RepositoryUrl>
     <RepositoryType>Git</RepositoryType>
     <PackageTags>algorithm-competitions, generator, online-judge</PackageTags>
+    <LangVersion>7.3</LangVersion>
   </PropertyGroup>
 
   <ItemGroup>

@@ -49,7 +49,7 @@ namespace gop.Adapters.Generic
             return pipeline.Use((pipe, problem) =>
             {
                 WriteInfo(new OutputText("Packing the problem...", true));
-                pipe.Container.TryGet<Logger>(out var logger);
+                var logger = pipe.Logger;
                 logger?.Info("Starting", LogCategory);
                 var config = problem.GetProfile();
                 pipe.Container.Set(config);
@@ -79,7 +79,7 @@ namespace gop.Adapters.Generic
             return pipeline.Use((pipe, problem) =>
             {
                 Write(new OutputText("  Saving...", true));
-                pipe.Container.TryGet<Logger>(out var logger);
+                var logger = pipe.Logger;
                 logger?.Info("Starting", LogCategory);
 
                 var arc = pipe.Container.Get<ZipArchive>();
@@ -117,7 +117,7 @@ namespace gop.Adapters.Generic
             return pipeline.Use((pipe, problem) =>
             {
                 Write(new OutputText("  Copy problem metadata...", true));
-                pipe.Container.TryGet<Logger>(out var logger);
+                var logger = pipe.Logger;
                 logger?.Info("Starting", LogCategory);
 
                 var arc = pipe.Container.Get<ZipArchive>();
@@ -136,7 +136,7 @@ namespace gop.Adapters.Generic
             return pipeline.Use((pipe, problem) =>
             {
                 Write(new OutputText("  Copy descriptions...", true));
-                pipe.Container.TryGet<Logger>(out var logger);
+                var logger = pipe.Logger;
                 logger?.Info("Starting", LogCategory);
 
                 var arc = pipe.Container.Get<ZipArchive>();
@@ -174,7 +174,7 @@ namespace gop.Adapters.Generic
             return pipeline.Use((pipe, problem) =>
             {
                 Write(new OutputText("  Copy descriptions...", true));
-                pipe.Container.TryGet<Logger>(out var logger);
+                var logger = pipe.Logger;
                 logger?.Info("Starting", LogCategory);
 
                 var arc = pipe.Container.Get<ZipArchive>();
@@ -213,7 +213,7 @@ namespace gop.Adapters.Generic
             {
                 Write(new OutputText("  Copy source codes...", true));
 
-                pipe.Container.TryGet<Logger>(out var logger);
+                var logger = pipe.Logger;
                 logger?.Info("Starting", LogCategory);
 
                 var arc = pipe.Container.Get<ZipArchive>();
@@ -232,7 +232,7 @@ namespace gop.Adapters.Generic
             return pipeline.Use((pipe, problem) =>
             {
                 Write(new OutputText("  Copy samples...", true));
-                pipe.Container.TryGet<Logger>(out var logger);
+                var logger = pipe.Logger;
                 logger?.Info("Starting", LogCategory);
 
                 var arc = pipe.Container.Get<ZipArchive>();
@@ -262,7 +262,7 @@ namespace gop.Adapters.Generic
             return pipeline.Use((pipe, problem) =>
             {
                 Write(new OutputText("  Copy tests...", true));
-                pipe.Container.TryGet<Logger>(out var logger);
+                var logger = pipe.Logger;
                 logger?.Info("Starting", LogCategory);
 
                 var arc = pipe.Container.Get<ZipArchive>();
@@ -298,7 +298,7 @@ namespace gop.Adapters.Generic
             return pipeline.Use((pipe, problem) =>
             {
                 Write(new OutputText("  Copy extra...", true));
-                pipe.Container.TryGet<Logger>(out var logger);
+                var logger = pipe.Logger;
                 logger?.Info("Starting", LogCategory);
 
                 var arc = pipe.Container.Get<ZipArchive>();
@@ -327,7 +327,7 @@ namespace gop.Adapters.Generic
         {
             return pipeline.Use((pipe, problem) =>
             {
-                pipe.Container.Set(logger);
+                pipe.Logger = logger;
                 return problem;
             });
         }
@@ -339,7 +339,7 @@ namespace gop.Adapters.Generic
             return pipeline.Use((pipe, problem) =>
             {
                 Write(new OutputText("  Add package metadata...", true));
-                pipe.Container.TryGet<Logger>(out var logger);
+                var logger = pipe.Logger;
                 logger?.Info("Starting", LogCategory);
 
                 var arc = pipe.Container.Get<ZipArchive>();
