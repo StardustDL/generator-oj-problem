@@ -59,7 +59,7 @@ namespace gop.Adapters.Generic
                 if (Directory.Exists(problem.Temp)) Directory.Delete(problem.Temp, true);
                 Directory.CreateDirectory(problem.Temp);
 
-                string _file = $"{package.Platform}-{config.Author}" + (package.Checked ? "" : "-unchecked") + ".zip";
+                string _file = $"{package.Platform}-{config.Author}-{config.Name}" + (package.Checked ? "" : "-unchecked") + ".zip";
                 string filename = Path.Join(problem.Target, _file);
                 if (File.Exists(filename)) File.Delete(filename);
 

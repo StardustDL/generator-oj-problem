@@ -21,6 +21,7 @@ namespace gop
         Generic,
         HustOJ,
         FPS,
+        LocalJudge,
     }
 
     class Program
@@ -39,7 +40,7 @@ namespace gop
             };
 
             var disableLJOption = new Option("--disable-local-judger", "Disable local judging for check.", new Argument<bool>(false));
-            var platformOption = new Option(new string[] { "--platform", "-p" }, "The target platform: generic, hustoj, fps.", new Argument<OnlineJudge>());
+            var platformOption = new Option(new string[] { "--platform", "-p" }, "The target platform: generic, hustoj, fps, localjudge.", new Argument<OnlineJudge>());
 
             var checkCommand = new Command("check", "Check whether the problem is available to pack.");
             checkCommand.AddOption(disableLJOption);
@@ -395,6 +396,9 @@ namespace gop
                 case OnlineJudge.FPS:
                     pipeline = Adapters.FreeProblemSet.Checker.UseDefault(pipeline);
                     break;
+                case OnlineJudge.LocalJudge:
+                    pipeline = Adapters.LocalJudge.Checker.UseDefault(pipeline);
+                    break;
                 default:
                     ConsoleUI.WriteError(new OutputText("Unsupported platform.", true));
                     return new List<Issue> { new Issue(IssueLevel.Error, $"Unsupported platform.") };
@@ -464,6 +468,14 @@ namespace gop
                 case OnlineJudge.FPS:
                     pipeline = Adapters.FreeProblemSet.Packer.UseDefault(pipeline, profile);
                     pipeline = Adapters.FreeProblemSet.Packer.UseSave(pipeline);
+                    break;
+                case OnlineJudge.LocalJudge:
+                    pipeline = Adapters.LocalJudge.Packer.UseDefault(pipeline, profile);
+                    if (Directory.GetFileSystemEntries(problem.Extra).Length > 0)
+                        pipeline = Adapters.Generic.Packer.UseExtra(pipeline);
+                    pipeline = Adapters.Generic.Packer.UseIssues(pipeline, issues);
+                    pipeline = Adapters.Generic.Packer.UsePackage(pipeline);
+                    pipeline = Adapters.Generic.Packer.UseSave(pipeline);
                     break;
                 default:
                     ConsoleUI.WriteError(new OutputText("Unsupported platform.", true));

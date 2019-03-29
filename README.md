@@ -171,7 +171,7 @@ Pack the problem into one package to submit.
 |-|-|
 |`--force`|Pack although checking failing.|
 |`--disable-local-judger`|Disable local judging for check.|
-|`-p, --platform`|The target platform: `generic`, `hustoj`, `fps`|
+|`-p, --platform`|The target platform: `generic`, `hustoj`, [`fps`](https://github.com/zhblue/freeproblemset), [`localjudge`](https://github.com/StardustDL/LocalJudge)|
 
 ```sh
 $ gop pack
