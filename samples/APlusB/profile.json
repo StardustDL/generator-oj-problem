@@ -1,7 +1,0 @@
-﻿{
-  "Name": "A+B Problem",
-  "Author": "StardustDL",
-  "TimeLimit": 1,
-  "MemoryLimit": 128,
-  "StdRun": ["./src/std"]
-}

@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?><fps url="https://github.com/zhblue/freeproblemset/" version="1.2"><generator name="HUSTOJ" url="https://github.com/zhblue/hustoj/"/><item><title><![CDATA[A + B Problem]]></title><time_limit unit="s"><![CDATA[1]]></time_limit><memory_limit unit="mb"><![CDATA[128]]></memory_limit><description><![CDATA[<p>﻿Calculate <code>a+b</code>.</p>
+]]></description><input><![CDATA[<p>﻿Two integer <code>a</code>, <code>b</code> (0&lt;=a,b&lt;=10).</p>
+]]></input><output><![CDATA[<p>﻿Output <code>a+b</code></p>
+]]></output><sample_input><![CDATA[1 2
+]]></sample_input><sample_output><![CDATA[3
+]]></sample_output><sample_input><![CDATA[﻿1 2
+]]></sample_input><sample_output><![CDATA[﻿3
+]]></sample_output><test_input><![CDATA[2 3
+]]></test_input><test_output><![CDATA[5
+]]></test_output><test_input><![CDATA[20 22
+]]></test_input><test_output><![CDATA[42
+]]></test_output><test_input><![CDATA[5 6
+]]></test_input><test_output><![CDATA[11
+]]></test_output><test_input><![CDATA[7 9
+]]></test_input><test_output><![CDATA[16
+]]></test_output><hint><![CDATA[<p>﻿Standard program:</p>
+<pre><code class="language-cpp">#include &lt;iostream&gt;
+using namespace std;
+int main()
+{
+    int a, b;
+    cin &gt;&gt; a &gt;&gt; b;
+    cout &lt;&lt; a + b &lt;&lt; endl;
+    return 0;
+}
+</code></pre>
+<p><em>Generated at 2022-09-16 20:59:58.073295 by <a href="https://github.com/StardustDL/generator-oj-problem">generator-oj-problem</a> v0.0.1.</em></p>
+]]></hint><source><![CDATA[]]></source><solution language="C++"><![CDATA[﻿// Standard program
+#include <iostream>
+using namespace std;
+int main()
+{
+    int a, b;
+    cin >> a >> b;
+    cout << a + b << endl;
+    return 0;
+}]]></solution></item></fps>

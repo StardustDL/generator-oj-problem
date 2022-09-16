@@ -1,9 +1,0 @@
-{
-  "profiles": {
-    "gop": {
-      "commandName": "Project",
-      "commandLineArgs": "check",
-      "workingDirectory": "G:\\Program\\generator-oj-problem\\temp"
-    }
-  }
-}
