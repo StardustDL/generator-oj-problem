@@ -30,3 +30,5 @@ gop check
 # Pack your problem in FreeProblemSet format
 gop -a fps pack
 ```
+
+> If you meet some encoding errors, ensure your Python interpreter runs in UTF-8 mode, e.g. adding **PYTHONUTF8=1** to your environment variables.
