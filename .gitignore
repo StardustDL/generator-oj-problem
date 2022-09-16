@@ -4,6 +4,7 @@
 /.vscode/
 /resources/*
 /temp/*
+**/dist/*
 
 # User-specific files
 *.suo

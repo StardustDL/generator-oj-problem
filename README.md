@@ -2,6 +2,14 @@
 
 [![](https://github.com/StardustDL/generator-oj-problem/workflows/CI/badge.svg)](https://github.com/StardustDL/generator-oj-problem/actions) [![](https://img.shields.io/github/license/StardustDL/generator-oj-problem.svg)](https://github.com/StardustDL/generator-oj-problem/blob/master/LICENSE) [![](https://img.shields.io/pypi/v/generator-oj-problem)](https://pypi.org/project/generator-oj-problem/) [![Downloads](https://pepy.tech/badge/generator-oj-problem?style=flat)](https://pepy.tech/project/generator-oj-problem) ![](https://img.shields.io/pypi/implementation/generator-oj-problem.svg?logo=pypi) ![](https://img.shields.io/pypi/pyversions/generator-oj-problem.svg?logo=pypi) ![](https://img.shields.io/pypi/wheel/generator-oj-problem.svg?logo=pypi) ![](https://img.shields.io/badge/Linux-yes-success?logo=linux) ![](https://img.shields.io/badge/Windows-yes-success?logo=windows) ![](https://img.shields.io/badge/MacOS-yes-success?logo=apple) ![](https://img.shields.io/badge/BSD-yes-success?logo=freebsd)
 
+A command-line tool to generate Online-Judge problem.
+
+- Render problem descriptions in markdown to HTML
+- Packing problem data in freeproblemset(hustoj) format
+- Easy to define adapters for other online-judge platform
+
+Have fun! If you have any suggestions or find any bugs, please tell me.
+
 ## Install
 
 ```sh
@@ -32,3 +40,20 @@ gop -a fps pack
 ```
 
 > If you meet some encoding errors, ensure your Python interpreter runs in UTF-8 mode, e.g. adding **PYTHONUTF8=1** to your environment variables.
+
+## Directory Structure
+
+> Here is a demo problem [A + B Problem](https://github.com/StardustDL/generator-oj-problem/tree/master/demo).
+> 
+> The file with extension `.md` means it supports plain [CommonMark](https://commonmark.org/) by built-in render. **Attention**: No LaTeX and embeded image supports.
+
+- `problem.yml` Problem metadata and configuration
+- `description.md` Description
+- `input.md` Description of input
+- `output.md` Description of output
+- `hint.md` Hint
+- `solution.txt` Solution source code
+- `samples/` Sample data
+   - `samples/0.in` Input of sample
+   - `samples/0.out` Output of sample
+- `tests/` Test data (same form to `samples/`)
