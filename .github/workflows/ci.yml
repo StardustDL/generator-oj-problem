@@ -62,15 +62,32 @@ jobs:
       - name: Install
         env:
           PYTHONUTF8: 1
-        run: python -m pip install ./dist/generator_oj_problem-0.0.1-py3-none-any.whl
+        run: python -m pip install ./dist/generator_oj_problem-0.0.2-py3-none-any.whl
       - name: Help
         run: gop --help
-      - name: Demo
+      - name: Generate Sample
+        env:
+          PYTHONUTF8: 1
+        run: |
+          cd demo
+          gop gen -s 1 -c 5 --sample
+      - name: Generate Test
+        env:
+          PYTHONUTF8: 1
+        run: |
+          cd demo
+          gop gen -s 2 -c 10
+      - name: Check
         env:
           PYTHONUTF8: 1
         run: |
           cd demo
           gop check
+      - name: Pack
+        env:
+          PYTHONUTF8: 1
+        run: |
+          cd demo
           gop -a fps pack
       - name: Upload artifacts
         uses: actions/upload-artifact@v3

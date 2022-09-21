@@ -3,6 +3,7 @@ from pathlib import Path
 from typing import Iterable
 from generator_oj_problem.models import Issue, Severity
 from generator_oj_problem.pipelines import Initializer
+from generator_oj_problem.generators.processors import TestGenerator
 from .paths import PathBuilder
 from yaml import safe_dump
 
@@ -59,7 +60,7 @@ int main()
                 "author": "",
                 "time": 1.0,
                 "memory": 128.0,
-                "solutionLanguage": "C++"
+                "solutionLanguage": "C++",
             }))
 
         if not paths.samples.exists() or paths.samples.is_file():
@@ -81,3 +82,5 @@ int main()
         yield from genIO(paths.samples, "0", "1 2\n", "3\n", "sample")
         yield from genIO(paths.tests, "0", "2 3\n", "5\n", "test")
         yield from genIO(paths.tests, "1", "20 22\n", "42\n", "test")
+
+        yield from TestGenerator(root).initialize()

@@ -1,6 +1,8 @@
 import os
 from pathlib import Path
 from typing import Iterable
+
+from generator_oj_problem.generators.processors import TestGenerator
 from .models import Issue, Problem, Severity, TestCase
 from . import getWorkingDirectory
 
@@ -64,3 +66,6 @@ class Pipeline:
             if not dist.exists() or dist.is_file():
                 os.makedirs(dist)
             yield from self.packer.pack(self.loader.build(self.root), dist)
+
+    def generator(self):
+        return TestGenerator(self.root)

@@ -56,6 +56,7 @@ def printIssues(issues: "Iterable[Issue]") -> Severity:
     print(results[maxLevel])
     return maxLevel
 
+
 adapters = list(allAdapters())
 pipeline: Pipeline = buildAdapter("generic")
 
@@ -78,6 +79,20 @@ def main(ctx=None, adapter: str = "generic", directory: pathlib.Path = ".") -> N
 
     global pipeline
     pipeline = buildAdapter(adapter)
+
+
+@main.command()
+@click.option("-s", "--start", default=0, help="Start case id.")
+@click.option("-c", "--count", default=10, help="The number of generated cases.")
+@click.option("--sample", is_flag=True, help="Generate sample cases.")
+@click.option("-r", "--rewrite", is_flag=True, help="Rewrite existed cases.")
+def generate(start: int = 0, count: int = 10, sample: bool = False, rewrite: bool = False):
+    """Generate input or output data."""
+
+    generator = pipeline.generator()
+
+    if printIssues(generator.generate(start, count, sample, rewrite)) == Severity.Error:
+        raise ClickException("Failed to generate.")
 
 
 @main.command()
