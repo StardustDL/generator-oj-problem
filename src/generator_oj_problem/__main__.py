@@ -47,13 +47,14 @@ results = {
 }
 
 
-def printIssues(issues: "Iterable[Issue]") -> Severity:
+def printIssues(issues: "Iterable[Issue]", final: bool = True) -> Severity:
     maxLevel = Severity.Info
     for item in issues:
         print(f"{icons[item.level]} {item.message}")
         maxLevel = max(maxLevel, item.level)
-    print("-" * 50)
-    print(results[maxLevel])
+    if final:
+        print("-" * 50)
+        print(results[maxLevel])
     return maxLevel
 
 
@@ -93,6 +94,14 @@ def generate(start: int = 0, count: int = 10, sample: bool = False, rewrite: boo
 
     if printIssues(generator.generate(start, count, sample, rewrite)) == Severity.Error:
         raise ClickException("Failed to generate.")
+
+
+@main.command()
+def trim():
+    """Trim problem data (for end-of-line LF or CRLF)."""
+
+    if printIssues(pipeline.trim()) == Severity.Error:
+        raise ClickException("Failed to trim.")
 
 
 @main.command()

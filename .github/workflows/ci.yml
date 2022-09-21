@@ -77,6 +77,18 @@ jobs:
         run: |
           cd demo
           gop gen -s 2 -c 10
+      - name: Check before trimming
+        env:
+          PYTHONUTF8: 1
+        run: |
+          cd demo
+          gop check
+      - name: Trim
+        env:
+          PYTHONUTF8: 1
+        run: |
+          cd demo
+          gop trim
       - name: Check
         env:
           PYTHONUTF8: 1

@@ -1,5 +1,12 @@
-author: ''
-memory: 128.0
+# Problem name
 name: A + B Problem
-solutionLanguage: C++
+# Author or source
+author: ''
+# Memory limit in MB
+memory: 128.0
+# Time limit in seconds
 time: 1.0
+# Use CRLF (\r\n) as the end-of-line sequence, set to false to use LF (\n)
+crlf: false
+# Programming language used by 'solution.txt'
+solutionLanguage: C++

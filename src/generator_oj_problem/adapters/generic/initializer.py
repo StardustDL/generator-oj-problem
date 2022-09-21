@@ -1,7 +1,7 @@
 import os
 from pathlib import Path
 from typing import Iterable
-from generator_oj_problem.models import Issue, Severity
+from generator_oj_problem.models import Issue, Problem, Severity
 from generator_oj_problem.pipelines import Initializer
 from generator_oj_problem.generators.processors import TestGenerator
 from .paths import PathBuilder
@@ -55,13 +55,19 @@ int main()
         if paths.metadata.exists():
             yield Issue("Metadata exists.", Severity.Warning)
         else:
-            paths.metadata.write_text(safe_dump({
-                "name": "A + B Problem",
-                "author": "",
-                "time": 1.0,
-                "memory": 128.0,
-                "solutionLanguage": "C++",
-            }))
+            paths.metadata.write_text("""# Problem name
+name: A + B Problem
+# Author or source
+author: ''
+# Memory limit in MB
+memory: 128.0
+# Time limit in seconds
+time: 1.0
+# Use CRLF (\\r\\n) as the end-of-line sequence, set to false to use LF (\\n)
+crlf: false
+# Programming language used by 'solution.txt'
+solutionLanguage: C++
+""")
 
         if not paths.samples.exists() or paths.samples.is_file():
             os.makedirs(paths.samples)
@@ -83,4 +89,4 @@ int main()
         yield from genIO(paths.tests, "0", "2 3\n", "5\n", "test")
         yield from genIO(paths.tests, "1", "20 22\n", "42\n", "test")
 
-        yield from TestGenerator(root).initialize()
+        yield from TestGenerator(root, Problem()).initialize()

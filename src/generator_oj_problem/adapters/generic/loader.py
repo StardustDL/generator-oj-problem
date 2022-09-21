@@ -36,7 +36,7 @@ class GenericReader(Reader):
             yield Issue("Hint does NOT exist.", Severity.Warning)
         else:
             problem.hint = paths.hint.read_text()
-        
+
         if not paths.solution.exists():
             yield Issue("Solution does NOT exist.", Severity.Warning)
         else:
@@ -51,7 +51,9 @@ class GenericReader(Reader):
                 problem.author = metadata.get("author", "")
                 problem.time = float(metadata.get("time", 1.0))
                 problem.memory = float(metadata.get("memory", 128.0))
-                problem.solutionLanguage = metadata.get("solutionLanguage", "C++")
+                problem.solutionLanguage = metadata.get(
+                    "solutionLanguage", "C++")
+                problem.crlf = metadata.get("crlf", False)
             except:
                 yield Issue("Metadata is in wrong format.", Severity.Error)
 
@@ -61,10 +63,10 @@ class GenericReader(Reader):
         if not root.exists() or root.is_file():
             return
         for infile in root.glob("*.in"):
-            case = TestCase(infile.stem, infile.read_text())
+            case = TestCase(infile.stem, infile.read_bytes())
             outfile = infile.with_suffix(".out")
             if outfile.exists():
-                case.output = outfile.read_text()
+                case.routput = outfile.read_bytes()
             yield case
 
     def samples(self) -> Iterable[TestCase]:

@@ -6,6 +6,7 @@ from generator_oj_problem.models import Issue, Problem, Severity, TestCase
 from generator_oj_problem.pipelines import Reader, Checker
 from .paths import PathBuilder
 from yaml import safe_load
+import chardet
 
 
 class Generic(Checker):
@@ -17,10 +18,10 @@ class Generic(Checker):
         yield from self._description(problem)
         print("Check sample cases...")
         for case in reader.samples():
-            yield from self._testcase(case, "sample")
+            yield from self._testcase(problem, case, "sample")
         print("Check test cases...")
         for case in reader.tests():
-            yield from self._testcase(case, "test")
+            yield from self._testcase(problem, case, "test")
 
     def _metadata(self, problem: Problem) -> "Iterable[Issue]":
         print("Check metadata...")
@@ -46,9 +47,24 @@ class Generic(Checker):
         if problem.solution.isspace():
             yield Issue("The solution is missing.", Severity.Warning)
 
-    def _testcase(self, case: TestCase, type: str) -> "Iterable[Issue]":
+    def _testcase(self, problem: Problem, case: TestCase, type: str) -> "Iterable[Issue]":
         print(f"  Check {type} case {case.name}...")
+
+        if len(case.rinput) > 0 and not chardet.detect(case.rinput).get("encoding", None) in {"utf-8", "ascii"}:
+            yield Issue(f"The input of {type} {case.name} is not in UTF-8.", Severity.Warning)
+        if len(case.routput) > 0 and not chardet.detect(case.routput).get("encoding", None) in {"utf-8", "ascii"}:
+            yield Issue(f"The output of {type} {case.name} is not in UTF-8.", Severity.Warning)
+
         if case.input.isspace():
             yield Issue(f"The input of {type} {case.name} is missing.", Severity.Error)
         if case.output.isspace():
             yield Issue(f"The output of {type} {case.name} is missing.", Severity.Error)
+
+        eolName = r"CRLF(\r\n)" if problem.crlf else r"LF(\n)"
+
+        for i, l in enumerate(case.input.splitlines(keepends=True)):
+            if l.endswith("\r\n") != problem.crlf:
+                yield Issue(f"The line {i+1} of {type} {case.name} input is not ended with {eolName}.", Severity.Warning)
+        for i, l in enumerate(case.output.splitlines(keepends=True)):
+            if l.endswith("\r\n") != problem.crlf:
+                yield Issue(f"The line {i+1} of {type} {case.name} output is not ended with {eolName}.", Severity.Warning)

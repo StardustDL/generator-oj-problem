@@ -4,12 +4,13 @@ from pathlib import Path
 import sys
 from typing import Iterable
 
-from generator_oj_problem.models import Issue, Severity
-from . import ENV_CASE_ID, ENV_REWRITE, ENV_TARGET, SUBMITED, Case
+from generator_oj_problem.models import Issue, Problem, Severity
+from . import ENV_CASE_ID, ENV_CRLF, ENV_REWRITE, ENV_TARGET, SUBMITED, Case
 
 
 class TestGenerator:
-    def __init__(self, root: Path) -> None:
+    def __init__(self, root: Path, problem: Problem) -> None:
+        self.problem = problem
         self.root = root
         self.file = root / "generator.py"
 
@@ -42,6 +43,7 @@ class TestGenerator:
                                              ENV_CASE_ID: str(case.id),
                                              ENV_TARGET: str(case.target.resolve()),
                                              ENV_REWRITE: "1" if rewrite else "0",
+                                             ENV_CRLF: "1" if self.problem.crlf else "0",
                                              "PYTHONUTF8": "1"})
                 stdout = result.stdout
                 if stdout is None or not stdout.endswith(SUBMITED):

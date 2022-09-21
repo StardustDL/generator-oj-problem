@@ -17,8 +17,16 @@ class Issue:
 @dataclass
 class TestCase:
     name: str = ""
-    input: str = ""
-    output: str = ""
+    rinput: bytes = b""
+    routput: bytes = b""
+
+    @property
+    def input(self):
+        return self.rinput.decode("utf-8")
+
+    @property
+    def output(self):
+        return self.routput.decode("utf-8")
 
 
 @dataclass
@@ -29,6 +37,7 @@ class Problem:
     memory: float = 128.0
     solution: str = ""
     solutionLanguage: str = "C++"
+    crlf: bool = False
 
     description: str = ""
     input: str = ""

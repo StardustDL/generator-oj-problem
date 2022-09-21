@@ -4,8 +4,10 @@
 
 A command-line tool to generate Online-Judge problem.
 
-- Render problem descriptions in markdown to HTML
+- Render problem descriptions in Markdown to HTML
+- Check problem descriptions and data, including missing fields, UTF-8 encoding, end-of-line CRLF/LF
 - Packing problem data in freeproblemset(hustoj) format
+- Mechanism for generating input and output test data
 - Easy to define adapters for other online-judge platform
 
 Have fun! If you have any suggestions or find any bugs, please tell me.
@@ -32,6 +34,14 @@ gop init
 # Modify the files to write problem
 ls .
 
+# Generate 2 sample data from id 1
+gop gen -s 1 -c 2 --sample
+# Generate 5 test data from id 2
+gop gen -s 2 -c 5
+
+# Trim sample and test data
+gop trim
+
 # Check validaty
 gop check
 
@@ -43,7 +53,7 @@ gop -a fps pack
 
 ## Directory Structure
 
-> Here is a demo problem [A + B Problem](https://github.com/StardustDL/generator-oj-problem/tree/master/demo).
+> Here is a demo problem [A + B Problem](https://github.com/StardustDL/generator-oj-problem/tree/master/demo). Details about [`problem.yml`](https://github.com/StardustDL/generator-oj-problem/tree/master/demo/problem.yml) and [`generator.py`](https://github.com/StardustDL/generator-oj-problem/tree/master/demo/generator.py) are given at the comments of the demo files.
 > 
 > The file with extension `.md` means it supports plain [CommonMark](https://commonmark.org/) by built-in render. **Attention**: No LaTeX and embeded image supports.
 
@@ -53,6 +63,7 @@ gop -a fps pack
 - `output.md` Description of output
 - `hint.md` Hint
 - `solution.txt` Solution source code
+- `generator.py` Generator for input or output data.
 - `samples/` Sample data
    - `samples/0.in` Input of sample
    - `samples/0.out` Output of sample
