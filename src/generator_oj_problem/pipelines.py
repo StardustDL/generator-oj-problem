@@ -70,9 +70,12 @@ class Pipeline:
                 os.makedirs(dist)
             yield from self.packer.pack(self.loader.build(self.root), dist)
 
-    def generator(self):
-        from generator_oj_problem.generators.processors import TestGenerator
-        return TestGenerator(self.root)
+    def generate(self, start: int, count: int, sample: bool = False, rewrite: bool = False):
+        if self.loader is None:
+            yield Issue("The loader is disabled.", Severity.Error)
+        else:
+            from generator_oj_problem.generators.processors import TestGenerator
+            return TestGenerator(self.root, self.loader.build(self.root)).generate(start, count, sample, rewrite)
 
     def trim(self):
         if self.loader is None:

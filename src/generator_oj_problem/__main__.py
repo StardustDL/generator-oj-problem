@@ -90,9 +90,7 @@ def main(ctx=None, adapter: str = "generic", directory: pathlib.Path = ".") -> N
 def generate(start: int = 0, count: int = 10, sample: bool = False, rewrite: bool = False):
     """Generate input or output data."""
 
-    generator = pipeline.generator()
-
-    if printIssues(generator.generate(start, count, sample, rewrite)) == Severity.Error:
+    if printIssues(pipeline.generate(start, count, sample, rewrite)) == Severity.Error:
         raise ClickException("Failed to generate.")
 
 
