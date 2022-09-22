@@ -75,7 +75,7 @@ class Pipeline:
             yield Issue("The loader is disabled.", Severity.Error)
         else:
             from generator_oj_problem.generators.processors import TestGenerator
-            return TestGenerator(self.root, self.loader.build(self.root)).generate(start, count, sample, rewrite)
+            yield from TestGenerator(self.root, self.loader.build(self.root)).generate(start, count, sample, rewrite)
 
     def trim(self):
         if self.loader is None:

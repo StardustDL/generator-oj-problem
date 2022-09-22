@@ -62,7 +62,7 @@ jobs:
       - name: Install
         env:
           PYTHONUTF8: 1
-        run: python -m pip install ./dist/generator_oj_problem-0.0.2-py3-none-any.whl
+        run: python -m pip install ./dist/generator_oj_problem-0.0.3-py3-none-any.whl
       - name: Help
         run: gop --help
       - name: Generate Sample
